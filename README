@@ -1,0 +1,44 @@
+mysql module for Qore
+version 1.0 by David Nichols
+
+Requires qore 0.7.0 and mysql 3.3 or newer headers and libraries to build
+
+With MySQL 4.1+ you can get transaction support and the module will use the more efficient prepared statement interface.
+
+The driver supports the following features (depending on the MySQL client library version):
+* is thread-safe
+* stored procedure execution with binding and retrieving values (5 and newer)
+* transaction management is supported (4.1 and newer)
+* transparent character encoding conversion is supported if necessary
+
+The driver's name is "mysql" and the Datasource type constant is SQL::DSMySQL
+ex: $db = new Datasource(DSMySQL);
+ex: $db = new Datasource("mysql");
+
+The mysql module is stable and has been extensively tested.
+
+
+Documentation TBD
+
+
+test/example script: test/db-test.q
+
+BUILD AND INSTALL
+-----------------
+
+If your mysql installation is in a non-standard location, set the MYSQL_DIR environment variable to the location of the installation before running configure.
+Note that you have to use g++ 4.0.* on Darwin to link with newer versions of the MySQL libraries
+
+configure
+make
+sudo make install
+
+The configure script will find out where your qore module directory is found and set this for the install directory.
+
+BUILD FROM SVN
+--------------
+
+reconf.sh
+configure
+make
+sudo make install
