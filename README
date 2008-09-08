@@ -17,9 +17,7 @@ ex: $db = new Datasource("mysql");
 
 The mysql module is stable and has been extensively tested.
 
-
-Documentation TBD
-
+Documentation: docs/mysql-module-doc.html
 
 test/example script: test/db-test.q
 

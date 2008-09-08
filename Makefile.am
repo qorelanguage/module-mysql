@@ -7,6 +7,7 @@ noinst_HEADERS = src/qore-mysql.h \
 
 EXTRA_DIST = COPYING ChangeLog AUTHORS README \
 	test/db-test.q \
+	docs/mysql-module-doc.html \
 	qore-mysql-module.spec
 
 libtool: $(LIBTOOL_DEPS)
