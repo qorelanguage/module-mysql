@@ -532,8 +532,10 @@ You can reach me at: mailto:david_nichols@users.sourceforge.net</pre>
 [[Binding and Types]]
 [[Stored Procedures]]</pre>
 </div>
-<div title="Introduction" modifier="DavidNichols" created="200808200719" modified="200809081514" changecount="53">
+<div title="Introduction" modifier="DavidNichols" created="200808200719" modified="200809090906" changecount="54">
 <pre>The pgsql module provides a [[MySQL|http://www.mysql.com]] driver to Qore's DBI system, allowing Qore programs to access ~MySQL databases through the {{{Datasource}}} and {{{DatasourcePool}}} classes.
+
+This module is released under the [[GPL 2|http://www.gnu.org/licenses/old-licenses/gpl-2.0.html]] and is tagged as such in the module's header (meaning it can only be loaded if the Qore library was initialized from a GPL program as well).  This is a requirement of the ~MySQL library; we cannot link to ~MySQL client libraries using the LGPL license.
 
 Example of creating a ~MySQL Datasource:
 {{{
