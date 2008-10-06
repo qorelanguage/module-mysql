@@ -1,0 +1,17 @@
+2008-09-09 09:11  david_nichols
+
+	* docs/mysql-module-doc.html: updated docs
+
+2008-09-08 15:17  david_nichols
+
+	* Makefile.am, README, docs, docs/mysql-module-doc.html,
+	  qore-mysql-module.spec: added project documentation
+
+2008-09-03 14:58  david_nichols
+
+	* ., AUTHORS, COPYING, ChangeLog, INSTALL, Makefile.am, NEWS,
+	  README, configure.ac, ltmain.sh, m4, m4/acx_pthread.m4,
+	  qore-mysql-module.spec, reconf.sh, src, src/Makefile.am,
+	  src/mysql.cc, src/qore-mysql-module.h, src/qore-mysql.h, test,
+	  test/db-test.q: initial import for independent project
+
