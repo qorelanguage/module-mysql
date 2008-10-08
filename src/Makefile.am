@@ -17,6 +17,6 @@ endif
 endif
 
 install-exec-hook:
-	mv $(libdir)/mysql.$(MODULE_SUFFIX) $(libdir)/mysql.qmod
-	rm -f $(libdir)/mysql.la
+	mv $(DESTDIR)$(libdir)/mysql.$(MODULE_SUFFIX) $(DESTDIR)$(libdir)/mysql.qmod
+	rm -f $(DESTDIR)$(libdir)/mysql.la
 

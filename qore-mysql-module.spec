@@ -79,7 +79,7 @@ stored procedure execution.
 %ifarch x86_64 ppc64 x390x
 c64=--enable-64bit
 %endif
-./configure RPM_OPT_FLAGS="$RPM_OPT_FLAGS" --prefix=$RPM_BUILD_ROOT/usr --disable-debug $c64
+./configure RPM_OPT_FLAGS="$RPM_OPT_FLAGS" --prefix=/usr --disable-debug $c64
 
 %build
 %{__make}
@@ -88,7 +88,7 @@ c64=--enable-64bit
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/%{module_dir}
 mkdir -p $RPM_BUILD_ROOT/usr/share/doc/qore-mysql-module
-make install
+make install DESTDIR=$RPM_BUILD_ROOT
 
 %clean
 rm -rf $RPM_BUILD_ROOT
