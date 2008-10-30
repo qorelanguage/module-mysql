@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 
 # AC_PREREQ(2.59)
-AC_INIT([qore-mysql-module], [1.0],
+AC_INIT([qore-mysql-module], [1.0.1],
         [David Nichols <nicholsman@gmail.com>],
         [qore-mysql-module])
 AM_INIT_AUTOMAKE
@@ -397,22 +397,43 @@ if test -z "$QORE_LDFLAGS"; then
 else
    # test qore version
    AC_MSG_CHECKING([qore library version])
-   qv_major=`grep QORE_VERSION_MAJOR $QORE_INC_DIR/qore/qore-version.h|cut -f3 -d\  2>/dev/null`
-   if test -z "$qv_major"; then
-      AC_MSG_ERROR([cannot determine; check Qore header files in $QORE_INC_DIR])
-   elif test "$qv_major" = "0"; then
-      qv_minor=`grep QORE_VERSION_MINOR $QORE_INC_DIR/qore/qore-version.h|cut -f3 -d\  2>/dev/null`
-      if test "$qv_version_minor" = "7"; then
-      	 AC_MSG_ERROR([invalid; this module requires version 0.7.0])
-      fi
-      qore_version=`grep QORE_VERSION.\" $QORE_INC_DIR/qore/qore-version.h|cut -f3 -d\ |sed s/\"//g 2>/dev/null`
-      AC_MSG_RESULT([${qore_version} OK])
 
-      if test -z "${prefix}" -o "${prefix}" = "NONE"; then
-         libdir=`qore --module-dir`
-      else
-         module_api=`qore --module-api`
-         libdir="$prefix/lib${LIBSUFFIX}/qore-module-api-$module_api"
+   # get qore version code
+   qvc=`grep QORE_VERSION_CODE $QORE_INC_DIR/qore/qore-version.h|cut -f3 -d\  2>/dev/null`
+
+   # get qore version string
+   qore_version=`grep QORE_VERSION.\" $QORE_INC_DIR/qore/qore-version.h|cut -f3 -d\ |sed s/\"//g 2>/dev/null`
+
+   # if version code not present, may be qore 0.7.0 or earlier
+   if test -z "$qvc"; then
+      qv_major=`grep QORE_VERSION_MAJOR $QORE_INC_DIR/qore/qore-version.h|cut -f3 -d\  2>/dev/null`
+      if test -z "$qv_major"; then
+         AC_MSG_ERROR([cannot determine; check Qore header files in $QORE_INC_DIR])
+      fi
+
+      qv_minor=`grep QORE_VERSION_MINOR $QORE_INC_DIR/qore/qore-version.h|cut -f3 -d\  2>/dev/null`
+      qv_sub=`grep QORE_VERSION_SUB $QORE_INC_DIR/qore/qore-version.h|cut -f3 -d\  2>/dev/null`
+
+      qvc=`printf "%02d%02d%02d" $qv_major $qv_minor $qv_sub`
+      AC_DEFINE_UNQUOTED([QORE_VERSION_CODE], $qvc, [define when missing in Qore headers])
+   fi
+
+   if test $qvc -lt 000701; then
+      AC_MSG_ERROR([found $qore_version; this module requires at least version 0.7.1])
+   fi
+
+   AC_MSG_RESULT([${qore_version} OK])
+
+   MODULE_API=`qore --module-api`
+   AC_SUBST(MODULE_API)
+
+   if test -z "${prefix}" -o "${prefix}" = "NONE"; then
+      libdir=`qore --module-dir`
+   else
+      libdir="$prefix/lib${LIBSUFFIX}/qore-modules"
+      qlibdir=`qore --module-dir`
+      if test "$libdir" != "$qlibdir"; then
+         AC_MSG_WARN([warning, installed qore's module dir is $qlibdir, this module will be installed in $libdir])
       fi
    fi
 fi

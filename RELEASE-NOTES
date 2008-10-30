@@ -1,0 +1,69 @@
+-------------
+Version 1.0.1
+-------------
+
+updated to supoprt new module handling and module api for qore 0.7.1
+minimum qore library required for build is now qore 0.7.1
+
+
+-----------
+Version 1.0
+-----------
+
+initial release as a separate project (separated from the qore project)
+
+
+--------------------
+all earlier releases
+--------------------
+
+----------
+Qore 0.6.2
+----------
+
+*) added support for binary types (BLOBs, etc)
+*) mapped DECIMAL type to a string to avoid losing precision
+*) timed-out connections will be automatically reconnected if no transaction is
+   in progress
+*) column names always returned in lower-case
+
+
+----------
+Qore 0.5.2
+----------
+
+*) The "mysql" module now supports directly binding data and retrieving values
+   from queries in the qore DBI syntax (already supported by the "oracle" 
+   module)
+*) also the select() and selectRows() DBI methods support value binding as well
+   for example, using the test database as given in examples/mysql-test-db.sql
+   and the following stored procedure:
+
+delimiter //
+create procedure get_family (in id int, out fname varchar(32))
+begin
+   select name into fname from family where family_id = id;
+end;
+//
+
+executing:
+$h = $mysqldb.exec("call get_family(%v, :name)", 1);
+
+will return ( "name" : "Smith" )
+
+----------
+Qore 0.5.0
+----------
+
+*) MySQL driver fixed to use the more efficient prepared statement interface
+   when available.  There was a bug in the driver causing it to always use the
+   older character-based interface even when the prepared statement interface
+   was available; this has been fixed
+
+----------
+Qore 0.4.0
+----------
+
+*) mysql driver substantially updated  
+   It now supports threading, proper character set handling, transactions, and
+   uses the more efficient prepared statement interface.

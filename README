@@ -1,7 +1,7 @@
 mysql module for Qore
-version 1.0 by David Nichols
+version 1.0.1 by David Nichols
 
-Requires qore 0.7.0 and mysql 3.3 or newer headers and libraries to build
+Requires qore 0.7.1 and mysql 3.3 or newer headers and libraries to build
 
 With MySQL 4.1+ you can get transaction support and the module will use the more efficient prepared statement interface.
 

@@ -1,5 +1,5 @@
-%define module_api 0.4
-%define module_dir %{_libdir}/qore-module-api-%{module_api}
+%define module_api %(qore --module-api 2>/dev/null)
+%define module_dir %(qore --module-dir 2>/dev/null)
 
 %if 0%{?sles_version}
 
@@ -43,7 +43,7 @@
 
 Summary: PostgreSQL DBI module for Qore
 Name: qore-mysql-module
-Version: 1.0
+Version: 1.0.1
 Release: 1%{dist}
 License: GPL
 Group: Development/Languages
@@ -52,7 +52,7 @@ Source: http://prdownloads.sourceforge.net/qore/%{name}-%{version}.tar.gz
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 Requires: /usr/bin/env
-Requires: qore-module-api-0.4
+Requires: qore-module-api-%{module_api}
 BuildRequires: gcc-c++
 BuildRequires: qore-devel
 %if 0%{?suse_version}
@@ -95,8 +95,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%{module_dir}/mysql.qmod
-%doc COPYING README ChangeLog AUTHORS test/db-test.q docs/mysql-module-doc.html
+%{module_dir}/mysql-api-%{module_api}.qmod
+%doc COPYING README RELEASE-NOTES ChangeLog AUTHORS test/db-test.q docs/mysql-module-doc.html
 
 %changelog
 * Tue Sep 2 2008 David Nichols <david_nichols@users.sourceforge.net>
