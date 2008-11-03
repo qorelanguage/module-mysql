@@ -27,9 +27,6 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include <qore/Qore.h>
-#include <qore/DBI.h>
-
 #include "qore-mysql.h"
 #include "qore-mysql-module.h"
 
@@ -43,7 +40,7 @@
 
 #ifndef QORE_MONOLITHIC
 DLLEXPORT char qore_module_name[] = "mysql";
-DLLEXPORT char qore_module_version[] = "1.0";
+DLLEXPORT char qore_module_version[] = PACKAGE_VERSION;
 DLLEXPORT char qore_module_description[] = "MySQL database driver";
 DLLEXPORT char qore_module_author[] = "David Nichols";
 DLLEXPORT char qore_module_url[] = "http://www.qoretechnologies.com/qore";
