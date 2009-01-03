@@ -1,8 +1,18 @@
 -------------
+Version 1.0.2
+-------------
+
+updated configure to check the directory specified with --prefix first when
+looking for dependent libraries
+
+updated to compile with mysql 5.1
+
+
+-------------
 Version 1.0.1
 -------------
 
-updated to supoprt new module handling and module api for qore 0.7.1
+updated to support new module handling and module api for qore 0.7.1
 minimum qore library required for build is now qore 0.7.1
 
 

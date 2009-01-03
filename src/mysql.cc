@@ -1115,12 +1115,16 @@ static class AbstractQoreNode *qore_mysql_get_client_version(const Datasource *d
    return new QoreBigIntNode(mysql_get_client_version());
 }
 
-QoreStringNode *qore_mysql_module_init()
-{
+QoreStringNode *qore_mysql_module_init() {
    // initialize thread key to test for mysql_thread_init()
    pthread_key_create(&ptk_mysql, NULL);
    tclist.push(mysql_thread_cleanup, NULL);
-   my_init();
+
+#ifdef HAVE_MYSQL_LIBRARY_INIT
+   mysql_library_init(0, 0, 0);
+#else
+   mysql_server_init(0, 0, 0);
+#endif
 
    // populate the method list structure with the method pointers
    qore_dbi_method_list methods;
@@ -1140,15 +1144,12 @@ QoreStringNode *qore_mysql_module_init()
    return 0;
 }
 
-void qore_mysql_module_ns_init(class QoreNamespace *rns, class QoreNamespace *qns)
-{
+void qore_mysql_module_ns_init(class QoreNamespace *rns, class QoreNamespace *qns) {
    QORE_TRACE("qore_mysql_module_ns_init()");
    // nothing to do at the moment
-
 }
 
-void qore_mysql_module_delete()
-{
+void qore_mysql_module_delete() {
    QORE_TRACE("qore_mysql_module_delete()");
 
    //printf("mysql delete\n");
@@ -1158,8 +1159,9 @@ void qore_mysql_module_delete()
    // delete thread key
    pthread_key_delete(ptk_mysql);
 
-   //DBI_deregisterDriver(DBID_MYSQL);
-
+#ifdef HAVE_MYSQL_LIBRARY_INIT
+   mysql_library_end();
+#endif
 }
 
 

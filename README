@@ -1,5 +1,5 @@
 mysql module for Qore
-version 1.0.1 by David Nichols
+version 1.0.2 by David Nichols
 
 Requires qore 0.7.1 and mysql 3.3 or newer headers and libraries to build
 

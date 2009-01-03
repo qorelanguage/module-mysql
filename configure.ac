@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 
 # AC_PREREQ(2.59)
-AC_INIT([qore-mysql-module], [1.0.1],
+AC_INIT([qore-mysql-module], [1.0.2],
         [David Nichols <nicholsman@gmail.com>],
         [qore-mysql-module])
 AM_INIT_AUTOMAKE
@@ -29,6 +29,11 @@ else
    if test $ARCH = i686 -o $ARCH = i586 -o $ARCH = athlon ; then
       ARCH=i386
    fi
+fi
+
+# set find prefix
+if test -n "$prefix" -a "$prefix" != "NONE"; then
+   find_prefix="$prefix"
 fi
 
 #AC_CANONICAL_HOST
@@ -314,6 +319,10 @@ MYSQL mysql; mysql_init(&mysql);
 	if test -n "`grep mysql_set_character_set ${with_mysql_includes}/*.h`"; then
 	   AC_DEFINE(HAVE_MYSQL_SET_CHARACTER_SET, 1, [Define if mysql_set_character_set() is available])
 	fi
+	# check for mysql_library_init
+	if test -n "`grep mysql_library_init ${with_mysql_includes}/*.h`"; then
+	   AC_DEFINE(HAVE_MYSQL_LIBRARY_INIT, 1, Define if mysql_library_init and mysql_library_end functions are available)
+	fi
         with_mysql=yes
      fi
   else
@@ -386,7 +395,7 @@ AC_ARG_WITH([qore-dir],
   [with_qore_dir="$QORE_DIR"])
 
 AC_MSG_CHECKING([for qore libraries and header files])
-for dir in "${with_qore_dir}" /usr / /usr/local /opt/gnu /opt/qore /usr/local/qore /opt/local /sw /usr/sfw /opt/sfw; do
+for dir in "${with_qore_dir}" "${find_prefix}" /usr / /usr/local /opt/gnu /opt/qore /usr/local/qore /opt/local /sw /usr/sfw /opt/sfw; do
     find_qore $dir
     if test -n "$QORE_LDFLAGS"; then
         break
