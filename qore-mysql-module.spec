@@ -3,17 +3,7 @@
 
 %if 0%{?sles_version}
 
-%if 0%{?sles_version} == 11
-%define dist .sle11
-%endif
-
-%if 0%{?sles_version} == 10
-%define dist .sle10
-%endif
-
-%if 0%{?sles_version} == 9
-%define dist .sle9
-%endif
+%define dist .sles{?sles_version}
 
 %else
 %if 0%{?suse_version}
@@ -107,7 +97,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc COPYING README RELEASE-NOTES ChangeLog AUTHORS test/db-test.q docs/mysql-module-doc.html
 
 %changelog
-* Sat Jan 3 2008 David Nichols <david_nichols@users.sourceforge.net>
+* Sat Jan 3 2009 David Nichols <david_nichols@users.sourceforge.net>
 - updated version to 1.0.2
 
 * Tue Sep 2 2008 David Nichols <david_nichols@users.sourceforge.net>

@@ -11,5 +11,7 @@ EXTRA_DIST = COPYING ChangeLog AUTHORS README \
 	docs/mysql-module-doc.html \
 	qore-mysql-module.spec
 
+ACLOCAL_AMFLAGS=-I m4
+
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
