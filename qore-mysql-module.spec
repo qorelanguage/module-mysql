@@ -47,7 +47,7 @@ License: GPL
 Group: Development/Languages
 URL: http://www.qoretechnologies.com/qore
 Source: http://prdownloads.sourceforge.net/qore/%{name}-%{version}.tar.gz
-Source0: %{name}-%{version}.tar.gz
+#Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 Requires: /usr/bin/env
 Requires: qore-module-api-%{module_api}
