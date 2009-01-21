@@ -1,3 +1,40 @@
+2009-01-08 18:43  david_nichols
+
+	* qore-mysql-module.spec: simplified spec files a little
+
+2009-01-08 15:13  david_nichols
+
+	* qore-mysql-module.spec: commented-out additional "Source0" line
+	  so that packages will build on Fedora 10 (OBS)
+
+2009-01-08 14:44  david_nichols
+
+	* reconf.sh: updated reconf.sh to look for glibtoolize as well as
+	  libtoolize
+
+2009-01-07 12:40  david_nichols
+
+	* Makefile.am, configure.ac, ltmain.sh, qore-mysql-module.spec,
+	  reconf.sh: updated reconf.sh to use libtoolize to auotmatically
+	  generate ltmain.sh
+
+2009-01-03 22:33  david_nichols
+
+	* qore-mysql-module.spec: updated spec file for new version and to
+	  make checks for newer *suse distributions
+
+2009-01-03 22:22  david_nichols
+
+	* README, RELEASE-NOTES, configure.ac, qore-mysql-module.spec,
+	  src/mysql.cc: updated version to 1.0.2; updated configure to
+	  check the directory specified with --prefix first when looking
+	  for dependent libraries; updated to compile with mysql 5.1
+
+2008-11-03 14:11  david_nichols
+
+	* ChangeLog, src/mysql.cc, src/qore-mysql.h: make module version
+	  reflect package version
+
 2008-10-30 10:38  david_nichols
 
 	* Makefile.am, README, RELEASE-NOTES, configure.ac,
