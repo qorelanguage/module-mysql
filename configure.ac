@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 
 # AC_PREREQ(2.59)
-AC_INIT([qore-mysql-module], [1.0.2],
+AC_INIT([qore-mysql-module], [1.0.3],
         [David Nichols <nicholsman@gmail.com>],
         [qore-mysql-module])
 AM_INIT_AUTOMAKE
@@ -201,8 +201,7 @@ AC_ARG_WITH([mysql],
                     [MySQL base directory])],
     [if test ! -d "${with_mysql}"; then AC_MSG_ERROR(directory ${with_mysql} does not exist for --with-mysql); unset with_mysql; fi])
 
-check_mysql()
-{
+check_mysql() {
     inc="$1/include"
     if test "$1" = "/"; then
        inc=/usr/include
@@ -212,7 +211,13 @@ check_mysql()
        with_mysql_includes=$inc
     elif test -f "$inc/mysql/mysql.h"; then
        with_mysql_includes=$inc/mysql
+    else
+       mid=`ls -rdt $1/include/mysql* 2>/dev/null | tail -1`
+       if test -n "$mid" -a -f "$mid/mysql/mysql.h"; then
+	  with_mysql_includes="$mid/mysql"
+       fi
     fi
+
     if test -z "$with_mysql_includes"; then
        return
     fi
@@ -228,6 +233,16 @@ check_mysql()
     elif test -f "$lib/mysql/libmysqlclient_r.a"; then
        with_mysql_libs=$lib/mysql
        mysql_static=1
+    else
+       mld=`ls -rdt $1/lib/mysql* 2>/dev/null | tail -1`
+       if test -n "$mld"; then
+          if test -f "$mld/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+	     with_mysql_libs="$mld/mysql"
+	  elif test -f "$mld/mysql/libmysqlclient_r.a"; then
+	     with_mysql_libs="$mld/mysql"
+	     mysql_static=1
+	  fi
+       fi
     fi
 
     if test -z "$with_mysql_libs"; then
@@ -253,7 +268,7 @@ if test "${with_mysql}" != "no"; then
       fi
    fi
 
-   for dir in $MYSQL_DIR / /usr /usr/local/mysql /opt/mysql /usr/mysql /sw /opt/local /opt/sfw /usr/sfw; do
+   for dir in $MYSQL_DIR / /usr /usr/local/mysql /opt/local /opt/mysql /usr/mysql /sw /opt/local /opt/sfw /usr/sfw; do
       check_mysql $dir
       if test -n "$with_mysql_includes"; then
 	 break;
@@ -333,16 +348,14 @@ else
    AC_MSG_ERROR([cannot build the module without mysql])
 fi
 
-set_qore_cppflags()
-{
+set_qore_cppflags() {
     QORE_INC_DIR=$1
     if test "$1" != "/usr/include"; then
         QORE_CPPFLAGS=-I$1
     fi
 }
 
-find_qore()
-{
+find_qore() {
     lib=$1/lib${LIBSUFFIX}
 
     # if we only want the static qore libraries
