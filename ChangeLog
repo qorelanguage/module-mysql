@@ -1,3 +1,13 @@
+2009-03-03 15:38  david_nichols
+
+	* RELEASE-NOTES, configure.ac, qore-mysql-module.spec: updated
+	  version to 1.0.4, fixed configure to look for mysql files in the
+	  directory set by --prefix first
+
+2009-03-03 07:20  david_nichols
+
+	* ChangeLog: updated changelog
+
 2009-03-02 15:11  david_nichols
 
 	* RELEASE-NOTES, configure.ac, qore-mysql-module.spec: updated
