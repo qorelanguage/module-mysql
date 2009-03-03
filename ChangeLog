@@ -1,3 +1,13 @@
+2009-03-02 15:11  david_nichols
+
+	* RELEASE-NOTES, configure.ac, qore-mysql-module.spec: updated
+	  configure script to find mysql from macports, updated release to
+	  1.0.3
+
+2009-01-21 10:18  david_nichols
+
+	* ChangeLog: updated changelog
+
 2009-01-08 18:43  david_nichols
 
 	* qore-mysql-module.spec: simplified spec files a little
