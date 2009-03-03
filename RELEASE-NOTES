@@ -1,4 +1,11 @@
 -------------
+Version 1.0.4
+-------------
+
+another update to compile properly with MacPorts and with mysql from MacPorts - searches the prefix first
+
+
+-------------
 Version 1.0.3
 -------------
 

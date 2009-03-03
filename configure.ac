@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 
 # AC_PREREQ(2.59)
-AC_INIT([qore-mysql-module], [1.0.3],
+AC_INIT([qore-mysql-module], [1.0.4x],
         [David Nichols <nicholsman@gmail.com>],
         [qore-mysql-module])
 AM_INIT_AUTOMAKE
@@ -268,7 +268,7 @@ if test "${with_mysql}" != "no"; then
       fi
    fi
 
-   for dir in $MYSQL_DIR / /usr /usr/local/mysql /opt/local /opt/mysql /usr/mysql /sw /opt/local /opt/sfw /usr/sfw; do
+   for dir in $MYSQL_DIR "${find_prefix}" / /usr /usr/local/mysql /opt/mysql /usr/mysql /sw /opt/local /opt/sfw /usr/sfw; do
       check_mysql $dir
       if test -n "$with_mysql_includes"; then
 	 break;
