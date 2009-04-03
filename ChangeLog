@@ -1,3 +1,11 @@
+2009-04-03 07:08  david_nichols
+
+	* configure.ac: corrected typo in version
+
+2009-03-03 15:40  david_nichols
+
+	* ChangeLog: updated changelog
+
 2009-03-03 15:38  david_nichols
 
 	* RELEASE-NOTES, configure.ac, qore-mysql-module.spec: updated
