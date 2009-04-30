@@ -3,7 +3,9 @@ Version 1.0.5
 -------------
 
 added the ability to execute statements that are not supported by the mysql
-prepared statement interface
+prepared statement interface; in this case the module will fall back to using
+the older code.  This allows DML statements to be properly executed with the
+Datasource::exec() method, for example.
 
 
 -------------
