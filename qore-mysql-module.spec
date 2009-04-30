@@ -41,7 +41,7 @@
 
 Summary: PostgreSQL DBI module for Qore
 Name: qore-mysql-module
-Version: 1.0.4
+Version: 1.0.5
 Release: 1%{dist}
 License: GPL
 Group: Development/Languages
@@ -97,6 +97,9 @@ rm -rf $RPM_BUILD_ROOT
 %doc COPYING README RELEASE-NOTES ChangeLog AUTHORS test/db-test.q docs/mysql-module-doc.html
 
 %changelog
+* Thu Apr 30 2009 David Nichols <david_nichols@users.sourceforge.net>
+- updated version to 1.0.5
+
 * Tue Mar 3 2009 David Nichols <david_nichols@users.sourceforge.net>
 - updated version to 1.0.4
 

@@ -1,8 +1,17 @@
 -------------
+Version 1.0.5
+-------------
+
+added the ability to execute statements that are not supported by the mysql
+prepared statement interface
+
+
+-------------
 Version 1.0.4
 -------------
 
-another update to compile properly with MacPorts and with mysql from MacPorts - searches the prefix first
+another update to compile properly with MacPorts and with mysql from MacPorts;
+searches the prefix first
 
 
 -------------
