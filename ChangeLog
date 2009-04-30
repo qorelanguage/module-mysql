@@ -1,3 +1,24 @@
+2009-04-30 08:33  david_nichols
+
+	* src/mysql.cc, src/qore-mysql-module.h, src/qore-mysql.h: updated
+	  copyright messages
+
+2009-04-30 08:31  david_nichols
+
+	* RELEASE-NOTES: added some text to the release notes
+
+2009-04-30 08:30  david_nichols
+
+	* RELEASE-NOTES, configure.ac, qore-mysql-module.spec,
+	  src/mysql.cc, src/qore-mysql.h: updated version to 1.0.5: added
+	  the ability to execute statements that are not supported by
+	  MySQL's prepared statement interface; in this case the module
+	  will fall back to the older code
+
+2009-04-03 07:09  david_nichols
+
+	* ChangeLog: updated changelog
+
 2009-04-03 07:08  david_nichols
 
 	* configure.ac: corrected typo in version
