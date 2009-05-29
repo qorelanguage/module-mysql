@@ -53,7 +53,7 @@ Requires: /usr/bin/env
 Requires: qore-module-api-%{module_api}
 BuildRequires: gcc-c++
 BuildRequires: qore-devel
-%if 0%{?suse_version}
+%if 0%{?suse_version} && !0%{sles_version}
 Requires: libmysqlclient_r15
 BuildRequires: libmysqlclient-devel
 %else
