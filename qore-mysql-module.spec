@@ -3,7 +3,7 @@
 
 %if 0%{?sles_version}
 
-%define dist .sles{?sles_version}
+%define dist .sles%{?sles_version}
 
 %else
 %if 0%{?suse_version}
