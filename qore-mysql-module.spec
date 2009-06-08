@@ -1,5 +1,5 @@
 %define module_api %(qore --module-api 2>/dev/null)
-%define module_dir %(qore --module-dir 2>/dev/null)
+%define module_dir %{_libdir}/qore-modules
 
 %if 0%{?sles_version}
 
@@ -53,12 +53,17 @@ Requires: /usr/bin/env
 Requires: qore-module-api-%{module_api}
 BuildRequires: gcc-c++
 BuildRequires: qore-devel
-%if 0%{?suse_version} && !0%{sles_version}
+%if 0%{?sles_version}
+Requires: mysql-client
+BuildRequires: mysql-devel
+%else
+%if 0%{?suse_version}
 Requires: libmysqlclient_r15
 BuildRequires: libmysqlclient-devel
 %else
 Requires: mysql-libs
 BuildRequires: mysql-devel
+%endif
 %endif
 BuildRequires: qore
 
