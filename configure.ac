@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 
 # AC_PREREQ(2.59)
-AC_INIT([qore-mysql-module], [1.0.5],
+AC_INIT([qore-mysql-module], [1.0.6],
         [David Nichols <nicholsman@gmail.com>],
         [qore-mysql-module])
 AM_INIT_AUTOMAKE
@@ -447,7 +447,14 @@ else
 
    AC_MSG_RESULT([${qore_version} OK])
 
-   MODULE_API=`qore --module-api`
+   MODULE_API=`qore --latest-module-api`
+   mapi_major=`qore --latest-module-api|cut -f1 -d.`
+   mapi_minor=`qore --latest-module-api|cut -f2 -d.`
+
+   if test "$mapi_major" -ge 0 -o "$mapi_minor" -ge 7; then
+      AC_DEFINE(QORE_HAS_DATASOURCE_PORT, 1, define if qore supports ports in the Datasource object)
+   fi
+
    AC_SUBST(MODULE_API)
 
    if test -z "${prefix}" -o "${prefix}" = "NONE"; then

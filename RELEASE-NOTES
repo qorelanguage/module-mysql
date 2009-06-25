@@ -1,4 +1,11 @@
 -------------
+Version 1.0.6
+-------------
+
+supports setting the server port number with qore 0.7.5 and greater
+
+
+-------------
 Version 1.0.5
 -------------
 

@@ -188,7 +188,13 @@ static MYSQL *qore_mysql_init(Datasource *ds, ExceptionSink *xsink) {
       xsink->outOfMemory();
       return 0;
    }
-   if (!mysql_real_connect(db, ds->getHostName(), ds->getUsername(), ds->getPassword(), ds->getDBName(), 0, NULL, CLIENT_FOUND_ROWS)) {
+#ifdef QORE_HAS_DATASOURCE_PORT
+   int port = ds->getPort();
+#else
+   int port = 0;
+#endif
+
+   if (!mysql_real_connect(db, ds->getHostName(), ds->getUsername(), ds->getPassword(), ds->getDBName(), port, 0, CLIENT_FOUND_ROWS)) {
       xsink->raiseException("DBI:MYSQL:CONNECT-ERROR", "%s", mysql_error(db));
       mysql_close(db);
       return 0;
