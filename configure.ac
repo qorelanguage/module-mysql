@@ -15,6 +15,9 @@ AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 AC_PROG_INSTALL
 
+# fix for building with older autotools
+if test ! -d m4; then mkdir m4; fi
+
 AC_CONFIG_MACRO_DIR([m4])
 
 # set system variables
