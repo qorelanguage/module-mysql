@@ -8,6 +8,10 @@
 %else
 %if 0%{?suse_version}
 
+%if 0%{?suse_version} == 1120
+%define dist .opensuse11_2
+%endif
+
 %if 0%{?suse_version} == 1110
 %define dist .opensuse11_1
 %endif
