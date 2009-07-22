@@ -532,14 +532,14 @@ You can reach me at: mailto:david_nichols@users.sourceforge.net</pre>
 [[Binding and Types]]
 [[Stored Procedures]]</pre>
 </div>
-<div title="Introduction" modifier="DavidNichols" created="200808200719" modified="200809090906" changecount="54">
+<div title="Introduction" modifier="YourName" created="200808200719" modified="200907221558" changecount="55">
 <pre>The pgsql module provides a [[MySQL|http://www.mysql.com]] driver to Qore's DBI system, allowing Qore programs to access ~MySQL databases through the {{{Datasource}}} and {{{DatasourcePool}}} classes.
 
 This module is released under the [[GPL 2|http://www.gnu.org/licenses/old-licenses/gpl-2.0.html]] and is tagged as such in the module's header (meaning it can only be loaded if the Qore library was initialized from a GPL program as well).  This is a requirement of the ~MySQL library; we cannot link to ~MySQL client libraries using the LGPL license.
 
-Example of creating a ~MySQL Datasource:
+Example of creating a ~MySQL Datasource (please note that {{{charset}}}, {{{hostname}}}, and {{{port}}} are optional, and {{{port}}} is only supported with qore version 0.7.5 or later):
 {{{
-$db = new Datasource(SQL::DSMySQL, $user, $pass, $db, $charset, $hostname);
+$db = new Datasource(SQL::DSMySQL, $user, $pass, $db, $charset, $hostname, $port);
 }}}
 
 This driver supports the following DBI capabilities when compiled against ~MySQL 5 or better: {{{DBI_CAP_TRANSACTION_MANAGEMENT}}}, {{{DBI_CAP_CHARSET_SUPPORT}}}, {{{DBI_CAP_LOB_SUPPORT}}}, {{{DBI_CAP_STORED_PROCEDURES}}}, {{{DBI_CAP_BIND_BY_VALUE}}}.
