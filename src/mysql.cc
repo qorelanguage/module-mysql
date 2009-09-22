@@ -213,9 +213,8 @@ static MYSQL *qore_mysql_init(Datasource *ds, ExceptionSink *xsink) {
    if (mysql_query(db, "set transaction isolation level read committed")) {
       xsink->raiseException("DBI:MYSQL:INIT-ERROR", (char *)mysql_error(db));
       mysql_close(db);
-      return NULL;
+      return 0;
    }
-   
 #endif
    
    return db;
