@@ -210,7 +210,7 @@ static MYSQL *qore_mysql_init(Datasource *ds, ExceptionSink *xsink) {
    mysql_autocommit(db, false);
    
    // set transaction handling
-   if (mysql_query(db, "set transaction isolation level read committed")) {
+   if (mysql_query(db, "set session transaction isolation level read committed")) {
       xsink->raiseException("DBI:MYSQL:INIT-ERROR", (char *)mysql_error(db));
       mysql_close(db);
       return 0;

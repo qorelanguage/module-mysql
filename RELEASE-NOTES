@@ -1,4 +1,12 @@
 -------------
+Version 1.0.7
+-------------
+
+fixed setting transaction isolation level; was broken when mysql 5.1 fixed a
+bug
+fixed compiling on OS/X snow leopard to target 64-bit by default on i386
+
+-------------
 Version 1.0.6
 -------------
 
