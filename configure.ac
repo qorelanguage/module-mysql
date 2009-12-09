@@ -463,11 +463,15 @@ else
       qv_minor=`grep QORE_VERSION_MINOR $QORE_INC_DIR/qore/qore-version.h|cut -f3 -d\  2>/dev/null`
       qv_sub=`grep QORE_VERSION_SUB $QORE_INC_DIR/qore/qore-version.h|cut -f3 -d\  2>/dev/null`
 
-      qvc=`printf "%02d%02d%02d" $qv_major $qv_minor $qv_sub`
+      if test "$qv_major" -gt 0; then
+         qvc=`printf "%d%02d%02d" $qv_major $qv_minor $qv_sub`
+      else
+         qvc=`printf "%d%02d" $qv_major $qv_minor $qv_sub`
+      fi
       AC_DEFINE_UNQUOTED([QORE_VERSION_CODE], $qvc, [define when missing in Qore headers])
    fi
 
-   if test $qvc -lt 000701; then
+   if test $qvc -lt 701; then
       AC_MSG_ERROR([found $qore_version; this module requires at least version 0.7.1])
    fi
 
