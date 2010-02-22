@@ -937,6 +937,13 @@ static AbstractQoreNode *qore_mysql_exec(Datasource *ds, const QoreString *qstr,
 #endif
 }
 
+#ifdef _QORE_HAS_DBI_EXECRAW
+static AbstractQoreNode *qore_mysql_execRaw(Datasource *ds, const QoreString *qstr, ExceptionSink *xsink) {
+    checkInit();
+    return qore_mysql_do_sql(ds, qstr, 0, xsink);
+}
+#endif
+
 static int qore_mysql_open_datasource(Datasource *ds, ExceptionSink *xsink) {
    checkInit();
 
@@ -994,6 +1001,9 @@ QoreStringNode *qore_mysql_module_init() {
    methods.add(QDBI_METHOD_SELECT,             qore_mysql_select);
    methods.add(QDBI_METHOD_SELECT_ROWS,        qore_mysql_select_rows);
    methods.add(QDBI_METHOD_EXEC,               qore_mysql_exec);
+#ifdef _QORE_HAS_DBI_EXECRAW
+   methods.add(QDBI_METHOD_EXECRAW,            qore_mysql_execRaw);
+#endif
    methods.add(QDBI_METHOD_COMMIT,             qore_mysql_commit);
    methods.add(QDBI_METHOD_ROLLBACK,           qore_mysql_rollback);
    methods.add(QDBI_METHOD_GET_SERVER_VERSION, qore_mysql_get_server_version);
