@@ -69,6 +69,9 @@ static int mysql_caps = DBI_CAP_NONE
 #ifdef HAVE_MYSQL_STMT
    | DBI_CAP_STORED_PROCEDURES | DBI_CAP_LOB_SUPPORT | DBI_CAP_BIND_BY_VALUE
 #endif
+#ifdef _QORE_HAS_DBI_EXECRAW
+   | DBI_CAP_HAS_EXECRAW
+#endif
 ;
 
 DBIDriver *DBID_MYSQL = 0;
