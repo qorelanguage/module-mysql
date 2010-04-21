@@ -10,7 +10,7 @@
   * transaction management added
   * character set support added
 
-  Copyright 2003 - 2009 David Nichols
+  Copyright 2003 - 2010 David Nichols
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -717,10 +717,9 @@ int QoreMySQLBindNode::bindValue(const QoreEncoding *enc, MYSQL_BIND *buf, Excep
       return 0;
    }
 
-   if (ntype == NT_DATE)
-   {
+   if (ntype == NT_DATE) {
       const DateTimeNode *date = reinterpret_cast<const DateTimeNode *>(data.value);
-      vbuf.assign(date);
+      vbuf.assign(*date);
       
       buf->buffer_type = MYSQL_TYPE_DATETIME;
       buf->buffer = &vbuf.time;
@@ -728,8 +727,7 @@ int QoreMySQLBindNode::bindValue(const QoreEncoding *enc, MYSQL_BIND *buf, Excep
    }
 
    
-   if (ntype == NT_BINARY)
-   {
+   if (ntype == NT_BINARY) {
       const BinaryNode *b = reinterpret_cast<const BinaryNode *>(data.value);
       len = b->size();
       buf->buffer_type = MYSQL_TYPE_BLOB;
@@ -739,16 +737,14 @@ int QoreMySQLBindNode::bindValue(const QoreEncoding *enc, MYSQL_BIND *buf, Excep
       return 0;
    }
 
-   if (ntype == NT_BOOLEAN)
-   {
+   if (ntype == NT_BOOLEAN) {
       vbuf.i4 = reinterpret_cast<const QoreBoolNode *>(data.value)->getValue();
       buf->buffer_type = MYSQL_TYPE_LONG;
       buf->buffer = (char *)&vbuf.i4;
       return 0;
    }
    
-   if (ntype == NT_INT)
-   {
+   if (ntype == NT_INT) {
       buf->buffer_type = MYSQL_TYPE_LONGLONG;
       buf->buffer = (char *)&(reinterpret_cast<const QoreBigIntNode *>(data.value))->val;
       return 0;
