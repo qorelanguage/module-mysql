@@ -3,6 +3,7 @@ Version 1.0.8
 -------------
 
 execRaw() method implemented
+updated to use new date/time APIs when compiled against qore 0.8.0+
 
 
 -------------
