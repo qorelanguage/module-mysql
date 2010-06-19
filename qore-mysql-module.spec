@@ -8,6 +8,10 @@
 %else
 %if 0%{?suse_version}
 
+%if 0%{?suse_version} == 1130
+%define dist .opensuse11_3
+%endif
+
 %if 0%{?suse_version} == 1120
 %define dist .opensuse11_2
 %endif
@@ -68,14 +72,11 @@ Requires: qore-module-api-%{module_api}
 BuildRequires: gcc-c++
 BuildRequires: qore-devel
 %if 0%{?sles_version}
-Requires: mysql-client
 BuildRequires: mysql-devel
 %else
 %if 0%{?suse_version}
-Requires: libmysqlclient_r15
 BuildRequires: libmysqlclient-devel
 %else
-Requires: mysql-libs
 BuildRequires: mysql-devel
 %endif
 %endif
