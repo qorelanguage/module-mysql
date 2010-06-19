@@ -1,166 +1,745 @@
+2010-06-15 18:49  david_nichols
+
+	* docs/mysql-module-doc.html:
+	  updated
+	  tikiwiki
+	  and
+	  added
+	  updated
+	  color
+	  scheme
+
+2010-06-10 14:23  david_nichols
+
+	* RELEASE-NOTES:
+	  updated
+	  release
+	  notes
+	  for
+	  new
+	  release
+
+2010-05-12 11:49  david_nichols
+
+	* configure.ac:
+	  solaris
+	  and
+	  sun
+	  studio
+	  compile
+	  and
+	  warning
+	  fixes/enhancements
+
+2010-05-11 14:44  david_nichols
+
+	* reconf.sh:
+	  compile
+	  fixes
+	  for
+	  solaris
+
+2010-04-28 10:15  david_nichols
+
+	* test/db-test.q:
+	  updates
+	  for
+	  new
+	  qore
+	  API
+	  and
+	  to
+	  address
+	  new
+	  warnings
+	  in
+	  test
+	  scripts
+
+2010-04-21 11:14  david_nichols
+
+	* src/mysql.cc,
+	  src/qore-mysql.h:
+	  updated
+	  to
+	  use
+	  more
+	  efficient
+	  APIs
+	  in
+	  qore
+	  0.8+
+	  if
+	  available
+	  when
+	  binding
+	  date
+	  values
+
+2010-04-16 09:32  subik
+
+	* RELEASE-NOTES,
+	  configure.ac,
+	  qore-mysql-module.spec,
+	  src/mysql.cc:
+	  sql
+	  drivers
+	  versions
+	  bump
+	  to
+	  spot
+	  execRaw.
+	  execRaw
+	  feature
+	  promoted
+	  to
+	  all
+	  drivers'
+	  feature
+	  lists.
+	  execRaw
+	  constant
+	  naming
+	  unified.
+
+2010-02-22 11:46  subik
+
+	* src/mysql.cc:
+	  execRaw
+	  for
+	  mysql
+
+2009-12-09 12:58  david_nichols
+
+	* configure.ac:
+	  fixed
+	  all
+	  modules
+	  to
+	  use
+	  decimal
+	  comparisons
+	  with
+	  the
+	  qore
+	  version
+	  string
+	  instead
+	  of
+	  octal
+	  so
+	  that
+	  they
+	  will
+	  still
+	  compile
+	  with
+	  qore
+	  v0.8.0
+	  and
+	  up...
+
+2009-11-22 06:03  david_nichols
+
+	* configure.ac:
+	  updated
+	  configure
+	  to
+	  assume
+	  64-bit
+	  build
+	  if
+	  host_cpu
+	  =
+	  "amd64"
+	  
+
+2009-10-30 08:22  david_nichols
+
+	* configure.ac:
+	  updated
+	  all
+	  module
+	  configure
+	  scripts
+	  to
+	  use
+	  gnutar
+	  on
+	  darwin
+	  to
+	  avoid
+	  picking
+	  up
+	  OSX
+	  resource
+	  files
+	  in
+	  source
+	  releases
+
+2009-10-03 09:56  david_nichols
+
+	* RELEASE-NOTES:
+	  cosmetic
+	  change
+
+2009-09-22 12:29  david_nichols
+
+	* RELEASE-NOTES,
+	  configure.ac,
+	  qore-mysql-module.spec,
+	  src/mysql.cc:
+	  fixed
+	  setting
+	  transaction
+	  isolation
+	  level;
+	  was
+	  broken
+	  when
+	  mysql
+	  5.1
+	  fixed
+	  a bug;
+	  updated
+	  release
+	  to
+	  1.0.7
+
+2009-09-22 12:18  david_nichols
+
+	* src/mysql.cc:
+	  cosmetic
+	  change
+
+2009-09-21 11:07  david_nichols
+
+	* configure.ac:
+	  updated
+	  module
+	  configure
+	  scripts
+	  to
+	  select
+	  64-bit
+	  target
+	  mode
+	  by
+	  default
+	  on
+	  snow
+	  leopard
+	  i386
+
+2009-09-10 06:49  david_nichols
+
+	* configure.ac:
+	  updated
+	  configure.ac
+	  to
+	  properly
+	  compile
+	  in
+	  32-bit
+	  mode
+	  on
+	  OSX
+	  snow
+	  leopard
+	  (10.6)
+
+2009-07-22 16:00  david_nichols
+
+	* docs/mysql-module-doc.html:
+	  updated
+	  docs
+	  to
+	  reflect
+	  the
+	  possibilty
+	  to
+	  give
+	  a
+	  port
+	  number
+
+2009-07-22 15:55  david_nichols
+
+	* ChangeLog:
+	  updated
+	  changelog
+
 2009-07-20 13:16  david_nichols
 
-	* qore-mysql-module.spec: added opensuse 11.2 detection to spec
-	  file, fixed rhel detection in spec files, updated configure.ac to
-	  work with older versions of autotools
+	* qore-mysql-module.spec:
+	  added
+	  opensuse
+	  11.2
+	  detection
+	  to
+	  spec
+	  file,
+	  fixed
+	  rhel
+	  detection
+	  in
+	  spec
+	  files,
+	  updated
+	  configure.ac
+	  to
+	  work
+	  with
+	  older
+	  versions
+	  of
+	  autotools
 
 2009-07-20 12:55  david_nichols
 
-	* configure.ac, qore-mysql-module.spec: fixed for building with
-	  older autotools; fixed rhel version detection
+	* configure.ac,
+	  qore-mysql-module.spec:
+	  fixed
+	  for
+	  building
+	  with
+	  older
+	  autotools;
+	  fixed
+	  rhel
+	  version
+	  detection
 
 2009-07-02 14:04  david_nichols
 
-	* reconf.sh: suppress extraneous error messages
+	* reconf.sh:
+	  suppress
+	  extraneous
+	  error
+	  messages
 
 2009-07-01 15:43  david_nichols
 
-	* src/mysql.cc: updated web site home page in modules' url
+	* src/mysql.cc:
+	  updated
+	  web
+	  site
+	  home
+	  page
+	  in
+	  modules'
+	  url
 
 2009-06-25 14:06  david_nichols
 
-	* RELEASE-NOTES, configure.ac, qore-mysql-module.spec,
-	  src/mysql.cc: supports setting the server port number with qore
-	  0.7.5 and greater
+	* RELEASE-NOTES,
+	  configure.ac,
+	  qore-mysql-module.spec,
+	  src/mysql.cc:
+	  supports
+	  setting
+	  the
+	  server
+	  port
+	  number
+	  with
+	  qore
+	  0.7.5
+	  and
+	  greater
 
 2009-06-08 08:38  david_nichols
 
-	* qore-mysql-module.spec: fixed qore module dir detection
+	* qore-mysql-module.spec:
+	  fixed
+	  qore
+	  module
+	  dir
+	  detection
 
 2009-05-29 07:27  david_nichols
 
-	* qore-mysql-module.spec: fixed dependencies on sles
+	* qore-mysql-module.spec:
+	  fixed
+	  dependencies
+	  on
+	  sles
 
 2009-05-29 07:22  david_nichols
 
-	* qore-mysql-module.spec: fixed typo in sles version detection
+	* qore-mysql-module.spec:
+	  fixed
+	  typo
+	  in
+	  sles
+	  version
+	  detection
 
 2009-04-30 08:34  david_nichols
 
-	* ChangeLog: updated changelog
+	* ChangeLog:
+	  updated
+	  changelog
 
 2009-04-30 08:33  david_nichols
 
-	* src/mysql.cc, src/qore-mysql-module.h, src/qore-mysql.h: updated
-	  copyright messages
+	* src/mysql.cc,
+	  src/qore-mysql-module.h,
+	  src/qore-mysql.h:
+	  updated
+	  copyright
+	  messages
 
 2009-04-30 08:31  david_nichols
 
-	* RELEASE-NOTES: added some text to the release notes
+	* RELEASE-NOTES:
+	  added
+	  some
+	  text
+	  to
+	  the
+	  release
+	  notes
 
 2009-04-30 08:30  david_nichols
 
-	* RELEASE-NOTES, configure.ac, qore-mysql-module.spec,
-	  src/mysql.cc, src/qore-mysql.h: updated version to 1.0.5: added
-	  the ability to execute statements that are not supported by
-	  MySQL's prepared statement interface; in this case the module
-	  will fall back to the older code
+	* RELEASE-NOTES,
+	  configure.ac,
+	  qore-mysql-module.spec,
+	  src/mysql.cc,
+	  src/qore-mysql.h:
+	  updated
+	  version
+	  to
+	  1.0.5:
+	  added
+	  the
+	  ability
+	  to
+	  execute
+	  statements
+	  that
+	  are
+	  not
+	  supported
+	  by
+	  MySQL's
+	  prepared
+	  statement
+	  interface;
+	  in
+	  this
+	  case
+	  the
+	  module
+	  will
+	  fall
+	  back
+	  to
+	  the
+	  older
+	  code
 
 2009-04-03 07:09  david_nichols
 
-	* ChangeLog: updated changelog
+	* ChangeLog:
+	  updated
+	  changelog
 
 2009-04-03 07:08  david_nichols
 
-	* configure.ac: corrected typo in version
+	* configure.ac:
+	  corrected
+	  typo
+	  in
+	  version
 
 2009-03-03 15:40  david_nichols
 
-	* ChangeLog: updated changelog
+	* ChangeLog:
+	  updated
+	  changelog
 
 2009-03-03 15:38  david_nichols
 
-	* RELEASE-NOTES, configure.ac, qore-mysql-module.spec: updated
-	  version to 1.0.4, fixed configure to look for mysql files in the
-	  directory set by --prefix first
+	* RELEASE-NOTES,
+	  configure.ac,
+	  qore-mysql-module.spec:
+	  updated
+	  version
+	  to
+	  1.0.4,
+	  fixed
+	  configure
+	  to
+	  look
+	  for
+	  mysql
+	  files
+	  in
+	  the
+	  directory
+	  set
+	  by
+	  --prefix
+	  first
 
 2009-03-03 07:20  david_nichols
 
-	* ChangeLog: updated changelog
+	* ChangeLog:
+	  updated
+	  changelog
 
 2009-03-02 15:11  david_nichols
 
-	* RELEASE-NOTES, configure.ac, qore-mysql-module.spec: updated
-	  configure script to find mysql from macports, updated release to
+	* RELEASE-NOTES,
+	  configure.ac,
+	  qore-mysql-module.spec:
+	  updated
+	  configure
+	  script
+	  to
+	  find
+	  mysql
+	  from
+	  macports,
+	  updated
+	  release
+	  to
 	  1.0.3
 
 2009-01-21 10:18  david_nichols
 
-	* ChangeLog: updated changelog
+	* ChangeLog:
+	  updated
+	  changelog
 
 2009-01-08 18:43  david_nichols
 
-	* qore-mysql-module.spec: simplified spec files a little
+	* qore-mysql-module.spec:
+	  simplified
+	  spec
+	  files
+	  a
+	  little
 
 2009-01-08 15:13  david_nichols
 
-	* qore-mysql-module.spec: commented-out additional "Source0" line
-	  so that packages will build on Fedora 10 (OBS)
+	* qore-mysql-module.spec:
+	  commented-out
+	  additional
+	  "Source0"
+	  line
+	  so
+	  that
+	  packages
+	  will
+	  build
+	  on
+	  Fedora
+	  10
+	  (OBS)
 
 2009-01-08 14:44  david_nichols
 
-	* reconf.sh: updated reconf.sh to look for glibtoolize as well as
+	* reconf.sh:
+	  updated reconf.sh
+	  to
+	  look
+	  for
+	  glibtoolize
+	  as
+	  well
+	  as
 	  libtoolize
 
 2009-01-07 12:40  david_nichols
 
-	* Makefile.am, configure.ac, ltmain.sh, qore-mysql-module.spec,
-	  reconf.sh: updated reconf.sh to use libtoolize to auotmatically
-	  generate ltmain.sh
+	* Makefile.am,
+	  configure.ac,
+	  ltmain.sh,
+	  qore-mysql-module.spec,
+	  reconf.sh:
+	  updated
+	  reconf.sh
+	  to
+	  use
+	  libtoolize
+	  to
+	  auotmatically
+	  generate
+	  ltmain.sh
 
 2009-01-03 22:33  david_nichols
 
-	* qore-mysql-module.spec: updated spec file for new version and to
-	  make checks for newer *suse distributions
+	* qore-mysql-module.spec:
+	  updated
+	  spec
+	  file
+	  for
+	  new
+	  version
+	  and
+	  to
+	  make
+	  checks
+	  for
+	  newer
+	  *suse
+	  distributions
 
 2009-01-03 22:22  david_nichols
 
-	* README, RELEASE-NOTES, configure.ac, qore-mysql-module.spec,
-	  src/mysql.cc: updated version to 1.0.2; updated configure to
-	  check the directory specified with --prefix first when looking
-	  for dependent libraries; updated to compile with mysql 5.1
+	* README,
+	  RELEASE-NOTES,
+	  configure.ac,
+	  qore-mysql-module.spec,
+	  src/mysql.cc:
+	  updated
+	  version
+	  to
+	  1.0.2;
+	  updated
+	  configure
+	  to
+	  check
+	  the
+	  directory
+	  specified
+	  with
+	  --prefix
+	  first
+	  when
+	  looking
+	  for
+	  dependent
+	  libraries;
+	  updated
+	  to
+	  compile
+	  with
+	  mysql
+	  5.1
 
 2008-11-03 14:11  david_nichols
 
-	* ChangeLog, src/mysql.cc, src/qore-mysql.h: make module version
-	  reflect package version
+	* ChangeLog,
+	  src/mysql.cc,
+	  src/qore-mysql.h:
+	  make
+	  module
+	  version
+	  reflect
+	  package
+	  version
 
 2008-10-30 10:38  david_nichols
 
-	* Makefile.am, README, RELEASE-NOTES, configure.ac,
-	  qore-mysql-module.spec, src/Makefile.am: updated to qore 0.7.1
-	  module handling, qore 0.7.1 is minimum version required
-	  for compile
+	* Makefile.am,
+	  README,
+	  RELEASE-NOTES,
+	  configure.ac,
+	  qore-mysql-module.spec,
+	  src/Makefile.am:
+	  updated
+	  to
+	  qore
+	  0.7.1
+	  module
+	  handling,
+	  qore
+	  0.7.1
+	  is
+	  minimum
+	  version
+	  required for
+	  compile
 
 2008-10-23 06:30  david_nichols
 
-	* configure.ac: updated to set 64-bit compile mode by default on
-	  itanium with g++ and aCC
+	* configure.ac:
+	  updated
+	  to
+	  set
+	  64-bit
+	  compile
+	  mode
+	  by
+	  default
+	  on
+	  itanium
+	  with
+	  g++
+	  and
+	  aCC
 
 2008-10-08 20:16  david_nichols
 
-	* qore-mysql-module.spec, src/Makefile.am: spec file and module
-	  build fixes using prefix=/usr and make install
+	* qore-mysql-module.spec,
+	  src/Makefile.am:
+	  spec
+	  file
+	  and
+	  module
+	  build
+	  fixes
+	  using
+	  prefix=/usr
+	  and
+	  make
+	  install
 	  DESTDIR=$RPM_BUILD_ROOT
 
 2008-10-06 20:22  david_nichols
 
-	* ChangeLog: updated changelog
+	* ChangeLog:
+	  updated
+	  changelog
 
 2008-09-09 09:11  david_nichols
 
-	* docs/mysql-module-doc.html: updated docs
+	* docs/mysql-module-doc.html:
+	  updated
+	  docs
 
 2008-09-08 15:17  david_nichols
 
-	* Makefile.am, README, docs, docs/mysql-module-doc.html,
-	  qore-mysql-module.spec: added project documentation
+	* Makefile.am,
+	  README,
+	  docs,
+	  docs/mysql-module-doc.html,
+	  qore-mysql-module.spec:
+	  added
+	  project
+	  documentation
 
 2008-09-03 14:58  david_nichols
 
-	* ., AUTHORS, COPYING, ChangeLog, INSTALL, Makefile.am, NEWS,
-	  README, configure.ac, ltmain.sh, m4, m4/acx_pthread.m4,
-	  qore-mysql-module.spec, reconf.sh, src, src/Makefile.am,
-	  src/mysql.cc, src/qore-mysql-module.h, src/qore-mysql.h, test,
-	  test/db-test.q: initial import for independent project
+	* .,
+	  AUTHORS,
+	  COPYING,
+	  ChangeLog,
+	  INSTALL,
+	  Makefile.am,
+	  NEWS,
+	  README,
+	  configure.ac,
+	  ltmain.sh,
+	  m4,
+	  m4/acx_pthread.m4,
+	  qore-mysql-module.spec,
+	  reconf.sh,
+	  src,
+	  src/Makefile.am,
+	  src/mysql.cc,
+	  src/qore-mysql-module.h,
+	  src/qore-mysql.h,
+	  test,
+	  test/db-test.q:
+	  initial
+	  import
+	  for
+	  independent
+	  project
 
