@@ -157,9 +157,13 @@ public:
 
    DLLLOCAL int reconnect(Datasource *ds, MYSQL_STMT *&stmt, const QoreString *str, ExceptionSink *xsink) {	 
       // throw an exception if a transaction is in progress
+#ifdef _QORE_HAS_DATASOURCE_ACTIVETRANSACTION
+      if (ds->activeTransaction()) {
+#else
       if (ds->isInTransaction()) {
+#endif
+         ds->connectionAborted();
 	 xsink->raiseException("DBI:MYSQL:CONNECTION-ERROR", "connection to MySQL database server lost while in a transaction; transaction has been lost");
-	 return -1;
       }
 
       MYSQL *new_db = qore_mysql_init(ds, xsink);
@@ -170,8 +174,8 @@ public:
       mysql_close(db);
       db = new_db;
 
-      if (xsink->isException())
-	 return -1;
+      if (ds->wasConnectionAborted())
+         return -1;
 
       // reinitialize statement
       mysql_stmt_close(stmt);
