@@ -146,6 +146,14 @@ public:
 
 static MYSQL *qore_mysql_init(Datasource *ds, ExceptionSink *xsink);
 
+static inline bool wasInTransaction(Datasource *ds) {
+#ifdef _QORE_HAS_DATASOURCE_ACTIVETRANSACTION
+   return ds->activeTransaction();
+#else
+   return ds->isInTransaction();
+#endif
+}
+
 class QoreMySQLConnection {
 public:
    MYSQL *db;
@@ -157,24 +165,20 @@ public:
 
    DLLLOCAL int reconnect(Datasource *ds, MYSQL_STMT *&stmt, const QoreString *str, ExceptionSink *xsink) {	 
       // throw an exception if a transaction is in progress
-#ifdef _QORE_HAS_DATASOURCE_ACTIVETRANSACTION
-      if (ds->activeTransaction()) {
-#else
-      if (ds->isInTransaction()) {
-#endif
-         ds->connectionAborted();
+      if (wasInTransaction(ds))
 	 xsink->raiseException("DBI:MYSQL:CONNECTION-ERROR", "connection to MySQL database server lost while in a transaction; transaction has been lost");
-      }
 
       MYSQL *new_db = qore_mysql_init(ds, xsink);
-      if (!new_db)
+      if (!new_db) {
+         ds->connectionAborted();
 	 return -1;
+      }
 
       printd(5, "mysql datasource %08p reconnected after timeout\n", ds);
       mysql_close(db);
       db = new_db;
 
-      if (ds->wasConnectionAborted())
+      if (wasInTransaction(ds))
          return -1;
 
       // reinitialize statement
