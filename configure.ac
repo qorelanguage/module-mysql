@@ -92,6 +92,35 @@ case "${host_os}" in
 		fi
 		AC_DEFINE(HPUX, 1, if compiling on HP-UX)
 		;;
+     *cygwin*)  SHLIB_SUFFIX=dll
+     		CPPFLAGS=-mwin32
+		windows=yes
+     		;;
+     *mingw32*) SHLIB_SUFFIX=dll
+     		windows=yes
+		mingw=yes
+		#CPPFLAGS="$CPPFLAGS -D_WIN32_WINNT=0x0501"
+		LDFLAGS="$LDFLAGS -lwsock32 -lws2_32 -lgdi32 -lz -lsecur32"
+		#make_dll=yes
+		CPPFLAGS="$CPPFLAGS -DBUILDING_DLL=1"
+		MODULE_LDFLAGS="-no-undefined"
+		OS=Windows
+		# set LIB_PREFIX if not already set
+		if test -z "$LIB_PREFIX"; then
+   		   AC_MSG_CHECKING([for mingw32 library prefix])
+		   cc_loc=`which $CXX|head -1`
+		   mingw_base=`dirname $cc_loc|sed 's/\/@<:@^/@:>@*$//'`
+		   cc_targ=`echo $CXX|sed s/-g++$//`
+		   if test -d $mingw_base/$cc_targ; then
+		      LIB_PREFIX=$mingw_base/$cc_targ
+		      AC_MSG_RESULT([$LIB_PREFIX])
+		   else
+		      AC_MSG_RESULT([not found])
+		   fi
+		fi
+		;;
+     *)         AC_WARN(Unknown platform ${host_os})
+                ;;
 esac
 AC_SUBST(SHLIB_SUFFIX)
 if test -z "$MODULE_SUFFIX" ; then
@@ -231,6 +260,13 @@ fi
 CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
 #LDFLAGS="$LDFLAGS $PTHREAD_LIBS"
 
+# allow the user to set a generic search prefix for libraries, includes, etc
+AC_ARG_WITH([lib-prefix],
+  [AS_HELP_STRING([--with-lib-prefix@<:@=DIR@:>@],
+                  [generic search prefix for libraries, includes, etc])],
+  [if test ! -d "${with_lib_prefix}"; then AC_MSG_ERROR([bad value ${with_lib_prefix} for --with-lib-prefix]); unset with_lib_prefix; fi],
+  [with_lib_prefix="$LIB_PREFIX"])
+
 AC_ARG_ENABLE([single-compilation-unit],
   [AS_HELP_STRING([--enable-single-compilation-unit],
                   [enable compilation as a single unit (default: on)])],
@@ -277,6 +313,9 @@ check_mysql() {
     elif test -f "$lib/mysql/libmysqlclient_r.a"; then
        with_mysql_libs=$lib/mysql
        mysql_static=1
+    elif test "$windows" = yes -a "$lib/lib/mysqlclient.lib"; then
+       with_mysql_libs=$lib
+       mysql_winlib=1
     else
        mld=`ls -rdt $1/lib/mysql* 2>/dev/null | tail -1`
        if test -n "$mld"; then
@@ -312,7 +351,7 @@ if test "${with_mysql}" != "no"; then
       fi
    fi
 
-   for dir in $MYSQL_DIR "${find_prefix}" / /usr /usr/local/mysql /opt/mysql /usr/mysql /sw /opt/local /opt/sfw /usr/sfw; do
+   for dir in $MYSQL_DIR "${with_lib_prefix}" "${find_prefix}" / /usr /usr/local/mysql /opt/mysql /usr/mysql /sw /opt/local /opt/sfw /usr/sfw; do
       check_mysql $dir
       if test -n "$with_mysql_includes"; then
 	 break;
@@ -322,6 +361,8 @@ if test "${with_mysql}" != "no"; then
    if test -n "$with_mysql_includes"; then
       if test -n "$mysql_static"; then
 	 AC_MSG_RESULT([includes=$with_mysql_includes, libs=$with_mysql_libs (static)])
+      elif test -n "$mysql_winlib"; then
+	 AC_MSG_RESULT([includes=$with_mysql_includes, libs=$with_mysql_libs (windows lib)])
       else
 	 AC_MSG_RESULT([includes=$with_mysql_includes, libs=$with_mysql_libs (shared)])
       fi
@@ -341,6 +382,8 @@ if test "${with_mysql}" = yes; then
      fi
      if test -n "$mysql_static"; then
           MYSQL_LIBS="$with_mysql_libs/libmysqlclient_r.a"
+     elif test -n "$mysql_winlib"; then
+          MYSQL_LIBS="$with_mysql_libs/lib/mysqlclient.lib"
      else
 	if test -n "$mysql_app_libs"; then
 	   MYSQL_LIBS="-L$with_mysql_libs -lmysqlclient_r"
@@ -354,6 +397,9 @@ if test "${with_mysql}" = yes; then
      CXXFLAGS="$CXXFLAGS $MYSQL_INCLUDES"
      LDFLAGS="$LDFLAGS $MYSQL_LIBS"
      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if defined _MSC_VER || ((defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__)
+#include <winsock.h>
+#endif
 #include <mysql.h>
 	 ]],[[
 MYSQL mysql; mysql_init(&mysql);
@@ -415,6 +461,12 @@ find_qore() {
             fi
             QORE_LDFLAGS="$QORE_LDFLAGS -lqore"
             AC_MSG_RESULT([$lib (shared)])
+       elif test "$mingw" = yes -a -f "$lib/libqore.${SHLIB_SUFFIX}.a"; then
+            if test "$lib" != "/lib" -a "$lib" != "/usr/lib"; then
+                QORE_LDFLAGS="-L$lib"
+            fi
+            QORE_LDFLAGS="$QORE_LDFLAGS -lqore"
+            AC_MSG_RESULT([$lib (shared)])
         elif test -f "$lib/libqore.a"; then
             if test "$lib" != "/lib" -a "$lib" != "/usr/lib"; then
                 QORE_LDFLAGS="-L$lib"
@@ -443,6 +495,11 @@ find_qore() {
 
     AC_SUBST(QORE_LDFLAGS)
     AC_SUBST(QORE_CPPFLAGS)
+
+    # add QORE_LDFLAGS to MYSQL_LIBS if on windows
+    if test "$windows" = yes; then
+      MYSQL_LIBS="$MYSQL_LIBS $QORE_LDFLAGS"
+    fi
 }
 
 # see if we can figure out where the qore library is
@@ -453,7 +510,7 @@ AC_ARG_WITH([qore-dir],
   [with_qore_dir="$QORE_DIR"])
 
 AC_MSG_CHECKING([for qore libraries and header files])
-for dir in "${with_qore_dir}" "${find_prefix}" /usr / /usr/local /opt/gnu /opt/qore /usr/local/qore /opt/local /sw /usr/sfw /opt/sfw; do
+for dir in "${with_qore_dir}" "${with_lib_prefix}" "${find_prefix}" /usr / /usr/local /opt/gnu /opt/qore /usr/local/qore /opt/local /sw /usr/sfw /opt/sfw; do
     find_qore $dir
     if test -n "$QORE_LDFLAGS"; then
         break
@@ -674,3 +731,11 @@ show_library_feature()
 show_library_feature optimizations $enable_optimization
 show_library_feature debug $enable_debug
 show_library_feature profiling $enable_profile
+
+# hack to use our libtool if on mingw to enable static libs to be linked in to the module
+if test "$mingw" = yes; then
+   # backup generated libtool
+   if test ! -e libtool.orig ; then cp libtool libtool.orig; fi
+   sed -e 's/deplibs_check_method=.*/deplibs_check_method=pass_all/g' -e 's/allow_undefined_flag=.*/allow_undefined_flag=yes/g' libtool > libtool.tmp
+   mv libtool.tmp libtool
+fi
