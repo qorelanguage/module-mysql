@@ -282,8 +282,13 @@ AC_ARG_WITH([mysql],
     [if test ! -d "${with_mysql}"; then AC_MSG_ERROR(directory ${with_mysql} does not exist for --with-mysql); unset with_mysql; fi])
 
 check_mysql() {
-    inc="$1/include"
-    if test "$1" = "/"; then
+    a="$1"
+    if test \( "$a" = "/" -o -z "$a" \) -a -h "$a/lib${LIBSUFFIX}"; then
+        a=/usr
+    fi
+
+    inc="$a/include"
+    if test "$a" = "/"; then
        inc=/usr/include
     fi
 
@@ -292,7 +297,7 @@ check_mysql() {
     elif test -f "$inc/mysql/mysql.h"; then
        with_mysql_includes=$inc/mysql
     else
-       mid=`ls -rdt $1/include/mysql* 2>/dev/null | tail -1`
+       mid=`ls -rdt $a/include/mysql* 2>/dev/null | tail -1`
        if test -n "$mid" -a -f "$mid/mysql/mysql.h"; then
 	  with_mysql_includes="$mid/mysql"
        fi
@@ -302,7 +307,7 @@ check_mysql() {
        return
     fi
 
-    lib="$1/lib${LIBSUFFIX}"
+    lib="$a/lib${LIBSUFFIX}"
     if test -f "$lib/libmysqlclient_r.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib
     elif test -f "$lib/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
@@ -317,7 +322,7 @@ check_mysql() {
        with_mysql_libs=$lib
        mysql_winlib=1
     else
-       mld=`ls -rdt $1/lib/mysql* 2>/dev/null | tail -1`
+       mld=`ls -rdt $a/lib/mysql* 2>/dev/null | tail -1`
        if test -n "$mld"; then
           if test -f "$mld/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
 	     with_mysql_libs="$mld/mysql"
@@ -446,7 +451,11 @@ set_qore_cppflags() {
 }
 
 find_qore() {
-    lib=$1/lib${LIBSUFFIX}
+    a="$1"
+    if test \( "$a" = "/" -o -z "$a" \) -a -h "$a/lib${LIBSUFFIX}"; then
+        a=/usr
+    fi
+    lib=$a/lib${LIBSUFFIX}
 
     # if we only want the static qore libraries
     if test -n "$qore_static"; then
@@ -481,10 +490,10 @@ find_qore() {
 
     AC_MSG_CHECKING([for qore include files])
     # try to find include files
-    if test "$1" = "/"; then
+    if test "$a" = "/"; then
         inc=/usr/include
     else
-        inc=$1/include
+        inc=$a/include
     fi
     if test -f "$inc/qore/Qore.h"; then
         AC_MSG_RESULT([found: $inc])
@@ -714,8 +723,7 @@ else
    printf " (32-bit)\n"
 fi
 
-show_library_feature()
-{
+show_library_feature() {
    printf "%-24s: " "$1"
    if test "$2" = "yes"; then
       printf "%-8s" yes
