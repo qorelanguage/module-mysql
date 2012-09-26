@@ -1,10 +1,10 @@
 # Process this file with autoconf to produce a configure script.
 
 # AC_PREREQ(2.59)
-AC_INIT([qore-mysql-module], [1.0.8],
-        [David Nichols <nicholsman@gmail.com>],
+AC_INIT([qore-mysql-module], [2.0],
+        [David Nichols <david@qore.org>],
         [qore-mysql-module])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([no-dist-gzip dist-bzip2 tar-ustar])
 AC_CONFIG_HEADER([config.h])
 
 AC_LANG(C++)
@@ -30,7 +30,10 @@ if test "$OS" = "HP-UX"; then
    fi
 else
    ARCH=`uname -p`
-   if test $ARCH = i686 -o $ARCH = i586 -o $ARCH = athlon ; then
+   if test $ARCH = unknown; then
+      ARCH=`uname -m`
+   fi
+   if test $ARCH = i686 -o $ARCH = i586 -o $ARCH = athlon; then
       ARCH=i386
    fi
 fi
@@ -44,6 +47,7 @@ fi
 # get CPU family
 case "${host_cpu}" in
    i[[3456]]86) cpu_family=i386 ;;
+   amd64)       cpu_family=x86_64 ;;
    *)           cpu_family=${host_cpu} ;;
 esac
 
@@ -173,6 +177,10 @@ if test "$enable_64bit" = "yes"; then
 		if test -d /usr/lib64; then
 		   LIBSUFFIX=64
                 fi
+		target="${host_cpu}-${host_os}"
+                if test -d /usr/lib/$target; then
+                   LIBSUFFIX=/$target
+                fi
 		AC_SUBST(LIBSUFFIX)
 		;;
       *hpux*)	if test "$host_cpu" = "ia64"; then
@@ -222,6 +230,11 @@ else
      *linux*)	if test "$GXX" = "yes"; then
 		   CXXFLAGS="$CXXFLAGS -m32"
 		fi
+                # multiarch
+                if test -a "$host_cpu" = "x86_64" -a -d /usr/lib32; then
+                   LIBSUFFIX=32
+                fi
+                AC_SUBST(LIBSUFFIX)
 		;;
      *darwin*)  if test "$GXX" = "yes"; then
                    CXXFLAGS="$CXXFLAGS -m32"
@@ -275,6 +288,28 @@ AC_ARG_ENABLE([single-compilation-unit],
        *)      AC_MSG_ERROR(bad value ${enable_single_compilation_unit} for --enable-single-compilation-unit) ;;
       esac],
   [enable_single_compilation_unit=yes])
+
+AC_ARG_WITH([doxygen],
+    [AS_HELP_STRING([--with-doxygen@<:@=PATH@:>@],
+                    [path to doxygen binary])],
+    [if test "${with_doxygen}" != "no" -a ! -x "${with_doxygen}"; then AC_MSG_ERROR(${with_doxygen} is not an executable in --with-doxygen); unset with_doxygen; fi ],
+    [with_doxygen=auto])
+
+if test "${with_doxygen}" = "auto"; then
+   AC_MSG_CHECKING([for doxygen to build API documentation])
+   # check for doxygen
+   with_doxygen=`which doxygen 2>/dev/null | grep -v "no doxygen in.*"`
+   if test -n "$with_doxygen"; then
+      doxy_version=`$with_doxygen --version`
+      AC_MSG_RESULT([found $with_doxygen $doxy_version])
+   else
+      AC_MSG_RESULT([not found])
+   fi
+fi
+
+if test -n "${with_doxygen}"; then
+   AC_SUBST(DOXYGEN_CMD, $with_doxygen)
+fi
 
 AC_ARG_WITH([mysql],
     [AS_HELP_STRING([--with-mysql@<:@=DIR@:>@],
@@ -709,11 +744,15 @@ AC_DEFINE_UNQUOTED([MODULE_TARGET_ARCH], "$ARCH", [host type])
 AC_DEFINE_UNQUOTED([MODULE_TARGET_OS], "$OS", [host type])
 AC_DEFINE_UNQUOTED([MODULE_TARGET_BITS], $bits, [32 or 64 bit build])
 
+AM_CONDITIONAL([COND_DOXYGEN],    [test -n "$with_doxygen"])
 AM_CONDITIONAL([COND_DEBUG],      [test "$enable_debug" = yes])
 AM_CONDITIONAL([COND_PROFILE],    [test "$enable_profile" = yes])
 AM_CONDITIONAL([COND_SINGLE_COMPILATION_UNIT], [test "$enable_single_compilation_unit" = yes])
+AM_CONDITIONAL([COND_MINGW],      [test "$mingw" = yes])
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT
+
+if test -n "$with_doxygen"; then enable_doxygen=yes; fi
 
 echo "*** MODULE FEATURES ***"
 printf "%-24s: %s %s" module "$OS" "$cpu_family"
@@ -739,6 +778,7 @@ show_library_feature() {
 show_library_feature optimizations $enable_optimization
 show_library_feature debug $enable_debug
 show_library_feature profiling $enable_profile
+show_library_feature doxygen $enable_doxygen
 
 # hack to use our libtool if on mingw to enable static libs to be linked in to the module
 if test "$mingw" = yes; then

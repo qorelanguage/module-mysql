@@ -31,7 +31,13 @@
 
 #include <mysql.h>
 
+#ifndef MYSQL_PORT
+#define MYSQL_PORT 3306
+#endif
+
 #ifdef HAVE_MYSQL_STMT
+class QoreMySQLConnection;
+
 class MyResult {
 private:
    MYSQL_FIELD *field;
@@ -42,15 +48,13 @@ private:
       my_bool mnull;
       long unsigned int mlen;
    } *bi;
+   QoreMySQLConnection* conn;
 
 public:
-   DLLLOCAL inline MyResult(MYSQL_RES *res) {
+   DLLLOCAL inline MyResult(MYSQL_RES *res, QoreMySQLConnection* c) : bindbuf(0), bi(0), conn(c) {
       field = mysql_fetch_fields(res);
       num_fields = mysql_num_fields(res);
       mysql_free_result(res);
-
-      bindbuf = NULL;
-      bi = NULL;
    }
 
    DLLLOCAL inline ~MyResult() {
@@ -79,7 +83,6 @@ public:
    DLLLOCAL inline int getNumFields() {
       return num_fields;
    }
-
 };
 
 // FIXME: do not assume byte widths
@@ -154,11 +157,26 @@ static inline bool wasInTransaction(Datasource *ds) {
 #endif
 }
 
+#define OPT_NUM_OPTIMAL 0  // return numeric as int64 if it fits or "number" if not
+#define OPT_NUM_STRING  1  // always return numeric types as strings
+#define OPT_NUM_NUMERIC 2  // always return numeric types as "number"
+
+#ifdef _QORE_HAS_DBI_OPTIONS
+// return optimal numeric values if options are supported
+#define OPT_NUM_DEFAULT OPT_NUM_OPTIMAL
+#else
+// return numeric values as strings if options are not supported -- for backwards-compatibility
+#define OPT_NUM_DEFAULT OPT_NUM_STRING
+#endif
+
 class QoreMySQLConnection {
 public:
    MYSQL *db;
+   int numeric_support;
 
-   DLLLOCAL QoreMySQLConnection(MYSQL *d) { db = d; }
+   DLLLOCAL QoreMySQLConnection(MYSQL *d) : db(d), numeric_support(OPT_NUM_DEFAULT) {
+   }
+
    DLLLOCAL ~QoreMySQLConnection() {
       mysql_close(db);
    }
@@ -213,6 +231,34 @@ public:
    }
    DLLLOCAL unsigned long getServerVersion() {
       return mysql_get_server_version(db);
+   }
+
+   DLLLOCAL void setOption(const char* opt, const AbstractQoreNode* val) {
+      if (!strcasecmp(opt, DBI_OPT_NUMBER_OPT)) {
+         numeric_support = OPT_NUM_OPTIMAL;
+         return;
+      }
+      if (!strcasecmp(opt, DBI_OPT_NUMBER_STRING)) {
+         numeric_support = OPT_NUM_STRING;
+         return;
+      }
+      assert(!strcasecmp(opt, DBI_OPT_NUMBER_NUMERIC));
+      numeric_support = OPT_NUM_NUMERIC;
+   }
+
+   DLLLOCAL AbstractQoreNode* getOption(const char* opt) {
+      if (!strcasecmp(opt, DBI_OPT_NUMBER_OPT))
+         return get_bool_node(numeric_support == OPT_NUM_OPTIMAL);
+
+      if (!strcasecmp(opt, DBI_OPT_NUMBER_STRING))
+         return get_bool_node(numeric_support == OPT_NUM_STRING);
+
+      assert(!strcasecmp(opt, DBI_OPT_NUMBER_NUMERIC));
+      return get_bool_node(numeric_support == OPT_NUM_NUMERIC);
+   }
+
+   DLLLOCAL int getNumeric() const { 
+      return numeric_support; 
    }
 };
 

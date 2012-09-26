@@ -1,4 +1,9 @@
-MYSQL_SOURCES = mysql.cc
+MNAME=mysql
+
+.qpp.cpp:
+	qpp $<
+
+MYSQL_SOURCES = mysql.cpp
 
 lib_LTLIBRARIES = mysql.la
 mysql_la_SOURCES = $(MYSQL_SOURCES)
@@ -16,7 +21,11 @@ AM_CXXFLAGS=-g
 endif
 endif
 
+if COND_MINGW
+RM_OTHER=$(DESTDIR)$(libdir)/$(MNAME).dll.a
+endif
+
 install-exec-hook:
-	mv $(DESTDIR)$(libdir)/mysql.$(MODULE_SUFFIX) $(DESTDIR)$(libdir)/mysql-api-$(MODULE_API).qmod
-	rm -f $(DESTDIR)$(libdir)/mysql.la
+	mv $(DESTDIR)$(libdir)/$(MNAME).$(MODULE_SUFFIX) $(DESTDIR)$(libdir)/$(MNAME)-api-$(MODULE_API).qmod
+	rm -f $(DESTDIR)$(libdir)/$(MNAME).la $(RM_OTHER)
 

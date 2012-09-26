@@ -1,3 +1,4 @@
+%define mod_ver 2.0
 %define module_api %(qore --latest-module-api 2>/dev/null)
 %define module_dir %{_libdir}/qore-modules
 
@@ -34,7 +35,7 @@
 
 Summary: MySQL DBI module for Qore
 Name: qore-mysql-module
-Version: 1.0.8
+Version: %{mod_ver}
 Release: 1%{dist}
 License: GPL
 Group: Development/Languages
@@ -92,7 +93,10 @@ rm -rf $RPM_BUILD_ROOT
 %doc COPYING README RELEASE-NOTES ChangeLog AUTHORS test/db-test.q docs/mysql-module-doc.html
 
 %changelog
-* Fri Apr 16 2010 Petr Vanek <petr.vanek@qoretechnologies.com>
+* Wed Sep 26 2012 David Nichols <david@qore.org> 2.0
+- updated version to 2.0
+
+* Fri Apr 16 2010 Petr Vanek <petr.vanek@qoretechnologies.com> 1.0.8
 - updated version to 1.0.8 and various typos fixed
 
 * Thu Jun 25 2009 David Nichols <david_nichols@users.sourceforge.net>
