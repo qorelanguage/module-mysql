@@ -1,7 +1,7 @@
 /*
   mysql.cc
 
-  MySQL Interface to Qore DBI layer
+  Mysql Interface to Qore DBI layer
 
   Qore Programming Language
 
@@ -40,10 +40,9 @@
 
 #include <mysqld_error.h>
 
-#ifndef QORE_MONOLITHIC
 DLLEXPORT char qore_module_name[] = "mysql";
 DLLEXPORT char qore_module_version[] = PACKAGE_VERSION;
-DLLEXPORT char qore_module_description[] = "MySQL database driver";
+DLLEXPORT char qore_module_description[] = "Mysql database driver";
 DLLEXPORT char qore_module_author[] = "David Nichols <david@qore.org>";
 DLLEXPORT char qore_module_url[] = "http://qore.org";
 DLLEXPORT int qore_module_api_major = QORE_MODULE_API_MAJOR;
@@ -55,7 +54,6 @@ DLLEXPORT qore_module_delete_t qore_module_delete = qore_mysql_module_delete;
 DLLEXPORT qore_license_t qore_module_license = QL_LGPL;
 #else
 DLLEXPORT qore_license_t qore_module_license = QL_GPL;
-#endif
 #endif
 
 // driver capabilities
@@ -77,14 +75,14 @@ static int mysql_caps = DBI_CAP_NONE
 #endif
 ;
 
-DBIDriver *DBID_MYSQL = 0;
+DBIDriver* DBID_MYSQL = 0;
 
 // this is the thread key that will tell us if the current thread has been initialized for mysql threading
 static pthread_key_t ptk_mysql;
 
 static struct mapEntry {
       char *mysql;
-      const QoreEncoding *id;
+      const QoreEncoding* id;
 } mapList[] = 
 {
    { (char*)"utf8", QCS_UTF8 },
@@ -126,7 +124,7 @@ static struct mapEntry {
 
 #define NUM_CHARMAPS (sizeof(mapList) / sizeof(struct mapEntry))
 
-static const QoreEncoding *get_qore_cs(char *cs) {
+static const QoreEncoding* get_qore_cs(char *cs) {
    int end;
    // get end of charset name
    char *p = strchr(cs, '_');
@@ -144,7 +142,7 @@ static const QoreEncoding *get_qore_cs(char *cs) {
    return QEM.findCreate(&cset);
 }
 
-static char *get_mysql_cs(const QoreEncoding *id) {
+static char* get_mysql_cs(const QoreEncoding* id) {
    for (unsigned i = 0; i < NUM_CHARMAPS; i++)
       if (mapList[i].id == id)
 	 return mapList[i].mysql;
@@ -155,16 +153,16 @@ static char *get_mysql_cs(const QoreEncoding *id) {
 static inline void checkInit() {
    if (!pthread_getspecific(ptk_mysql)) {
       mysql_thread_init();
-      pthread_setspecific(ptk_mysql, (void *)1);
+      pthread_setspecific(ptk_mysql, (void*)1);
    }
 }
 
-static void mysql_thread_cleanup(void *unused) {
+static void mysql_thread_cleanup(void* unused) {
    if (pthread_getspecific(ptk_mysql))
       mysql_thread_end();
 }
 
-static MYSQL *qore_mysql_init(Datasource *ds, ExceptionSink *xsink) {   
+static MYSQL* qore_mysql_init(Datasource* ds, ExceptionSink* xsink) {   
    printd(5, "qore_mysql_init() datasource %08p for DB=%s\n", ds, 
 	  ds->getDBName() ? ds->getDBName() : "unknown");
    
@@ -216,7 +214,7 @@ static MYSQL *qore_mysql_init(Datasource *ds, ExceptionSink *xsink) {
 #endif
    
 #ifdef HAVE_MYSQL_COMMIT
-   // autocommits are handled by qore, not by MySQL
+   // autocommits are handled by qore, not by Mysql
    mysql_autocommit(db, false);
    
    // set transaction handling
@@ -230,10 +228,10 @@ static MYSQL *qore_mysql_init(Datasource *ds, ExceptionSink *xsink) {
    return db;
 }
 
-static int qore_mysql_commit(Datasource *ds, ExceptionSink *xsink) {
+static int qore_mysql_commit(Datasource* ds, ExceptionSink* xsink) {
 #ifdef HAVE_MYSQL_COMMIT
    checkInit();
-   QoreMySQLConnection *d_mysql =(QoreMySQLConnection *)ds->getPrivateData();
+   QoreMysqlConnection *d_mysql =(QoreMysqlConnection *)ds->getPrivateData();
 
    // calls mysql_commit() on the connection
    if (d_mysql->commit()) {
@@ -242,15 +240,15 @@ static int qore_mysql_commit(Datasource *ds, ExceptionSink *xsink) {
    }
    return 0;
 #else
-   xsink->raiseException("DBI:MYSQL:NOT-IMPLEMENTED", "this version of the MySQL client API does not support transaction management");
+   xsink->raiseException("DBI:MYSQL:NOT-IMPLEMENTED", "this version of the Mysql client API does not support transaction management");
    return -1;
 #endif
 }
 
-static int qore_mysql_rollback(Datasource *ds, ExceptionSink *xsink) {
+static int qore_mysql_rollback(Datasource* ds, ExceptionSink* xsink) {
 #ifdef HAVE_MYSQL_COMMIT
    checkInit();
-   QoreMySQLConnection *d_mysql =(QoreMySQLConnection *)ds->getPrivateData();
+   QoreMysqlConnection *d_mysql =(QoreMysqlConnection *)ds->getPrivateData();
 
    // calls mysql_rollback() on the connection
    if (d_mysql->rollback()) {
@@ -259,18 +257,16 @@ static int qore_mysql_rollback(Datasource *ds, ExceptionSink *xsink) {
    }
    return 0;
 #else
-   xsink->raiseException("DBI:MYSQL:NOT-IMPLEMENTED", "this version of the MySQL client API does not support transaction management");
+   xsink->raiseException("DBI:MYSQL:NOT-IMPLEMENTED", "this version of the Mysql client API does not support transaction management");
    return -1;
 #endif
 }
 
-static void getLowerCaseName(QoreString *str, const QoreEncoding *enc, const char *name) {
-   str->set(name, enc);
-   str->tolwr();
-}
-
 #ifdef HAVE_MYSQL_STMT
 void MyResult::bind(MYSQL_STMT *stmt) {
+   if (bindbuf)
+      return;
+
    bindbuf = new MYSQL_BIND[num_fields];
    bi      = new bindInfo[num_fields];
 
@@ -314,10 +310,9 @@ void MyResult::bind(MYSQL_STMT *stmt) {
 	 case FIELD_TYPE_BLOB:
 	 case FIELD_TYPE_LONG_BLOB:
 	    // this is only binary data if charsetnr == 63
-	    if (field[i].charsetnr == 63)
-	    {
+	    if (field[i].charsetnr == 63) {
 	       bindbuf[i].buffer_type = MYSQL_TYPE_BLOB;
-	       bindbuf[i].buffer = new char[field[i].length];
+	       bindbuf[i].buffer = malloc(sizeof(char) * field[i].length);
 	       bindbuf[i].buffer_length = field[i].length;
 	       break;
 	    }
@@ -325,7 +320,7 @@ void MyResult::bind(MYSQL_STMT *stmt) {
 	    // for all other types (treated as string)
 	 default:
 	    bindbuf[i].buffer_type = MYSQL_TYPE_STRING;
-	    bindbuf[i].buffer = new char[field[i].length + 1];
+	    bindbuf[i].buffer = malloc(sizeof(char) * (field[i].length + 1));
 	    bindbuf[i].buffer_length = field[i].length + 1;
 	    break;
       }
@@ -339,8 +334,8 @@ void MyResult::bind(MYSQL_STMT *stmt) {
    mysql_stmt_bind_result(stmt, bindbuf);
 }
 
-AbstractQoreNode* MyResult::getBoundColumnValue(const QoreEncoding *csid, int i) {
-   AbstractQoreNode *n = NULL;
+AbstractQoreNode* MyResult::getBoundColumnValue(int i, bool destructive) {
+   AbstractQoreNode* n = NULL;
    
    if (bi[i].mnull)
       n = null();
@@ -383,48 +378,127 @@ AbstractQoreNode* MyResult::getBoundColumnValue(const QoreEncoding *csid, int i)
       }
 
       //printf("string (%d): '%s'\n", mlen[i], (char *)bindbuf[i].buffer);
-      n = new QoreStringNode(p, csid);
+      if (destructive) {
+	 n = new QoreStringNode((char*)p, strlen(p), field[i].length + 1, enc);
+	 bindbuf[i].buffer = 0;	 
+      }
+      else
+	 n = new QoreStringNode(p, enc);
    }
    else if (bindbuf[i].buffer_type == MYSQL_TYPE_DATETIME) {
-      MYSQL_TIME *t = (MYSQL_TIME *)bindbuf[i].buffer;
+      MYSQL_TIME *t = (MYSQL_TIME*)bindbuf[i].buffer;
       n = new DateTimeNode(t->year, t->month, t->day, t->hour, t->minute, t->second);
    }
-   else if (bindbuf[i].buffer_type == MYSQL_TYPE_BLOB)
-      n = new BinaryNode(bindbuf[i].buffer, *bindbuf[i].length);
+   else if (bindbuf[i].buffer_type == MYSQL_TYPE_BLOB) {
+      if (destructive) {
+	 n = new BinaryNode(bindbuf[i].buffer, *bindbuf[i].length);
+	 bindbuf[i].buffer = 0;	 
+      }
+      else {
+	 BinaryNode* b = new BinaryNode;
+	 b->append(bindbuf[i].buffer, *bindbuf[i].length);
+	 n = b;
+      }
+   }
 
+   //printd(5, "MyResult::getBoundColumnValue(%d) this: %p returning: %p (%s)\n", i, this, n, get_type_name(n));
    return n;
 }
 
-QoreMySQLBindGroup::QoreMySQLBindGroup(Datasource *ods) {
-   head = tail = NULL;
-   stmt = NULL;
-   hasOutput = false;
-   bind = NULL;
-   len = 0;
-   ds = ods;
-   mydata = (QoreMySQLConnection *)ds->getPrivateData();
-}
-
-QoreMySQLBindGroup::~QoreMySQLBindGroup() {
-   if (bind)
+void QoreMysqlBindGroup::reset(ExceptionSink* xsink) {
+   if (bind) {
       delete [] bind;
+      bind = 0;
+   }
 
-   if (stmt)
+   if (stmt) {
       mysql_stmt_close(stmt);
+      stmt = 0;
+   }
 
-   if (str)
+   if (str) {
       delete str;
+      str = 0;
+   }
 
-   QoreMySQLBindNode *w = head;
-   while (w) {
-      
-      head = w->next;
-      delete w;
-      w = head;
+   if (head) {
+      QoreMysqlBindNode* w = head;
+      while (w) {
+	 head = w->next;
+	 w->del(xsink);
+	 w = head;
+      }
+      tail = 0;
    }
 }
 
-int QoreMySQLBindGroup::prepare_and_bind(const QoreString *ostr, const QoreListNode *args, ExceptionSink *xsink) {
+int QoreMysqlBindGroup::prepare(bool unsupported_ok, ExceptionSink* xsink) {
+   assert(!stmt);
+   stmt = mydata->stmt_init(xsink);
+   if (!stmt)
+      return -1;
+
+   if (mysql_stmt_prepare(stmt, str->getBuffer(), str->strlen())) {
+      int en = mydata->q_errno();
+      if (en != CR_SERVER_GONE_ERROR) {
+	 if (en == ER_UNSUPPORTED_PS && unsupported_ok)
+	    return 1;
+	 xsink->raiseException("DBI:MYSQL:STATEMENT-ERROR", "error %d: %s", en, mydata->error());
+	 return -1;
+      }
+
+      if (mydata->reconnect(ds, stmt, *str, xsink))
+	 return -1;
+   }
+
+   return 0;
+}
+
+int QoreMysqlBindGroup::bindArgs(ExceptionSink* xsink) {
+   if (!len)
+      return 0;
+
+   if (!bind) {
+      // allocate bind buffer
+      bind = new MYSQL_BIND[len];
+      // zero out bind memory
+      memset(bind, 0, sizeof(MYSQL_BIND) * len);
+   }
+
+   // (re-)bind all values/placeholders
+   QoreMysqlBindNode* w = head;
+   int pos = 0;
+   while (w) {
+      printd(5, "MBG::MBG() binding value at position %d (%s)\n", pos, w->data.value ? w->data.value->getTypeName() : "<null>");
+      if (w->bindValue(ds->getQoreEncoding(), &bind[pos], xsink))
+	 return -1;
+      pos++;
+      w = w->next;
+   }
+
+   // now perform the bind
+   if (mysql_stmt_bind_param(stmt, bind)) {
+      xsink->raiseException("DBI:MYSQL-ERROR", "error %d: %s", mydata->q_errno(), mydata->error());
+      return -1;
+   }
+
+   return 0;
+}
+
+int QoreMysqlBindGroup::rebindArgs(const QoreListNode* args, ExceptionSink* xsink) {
+   QoreMysqlBindNode* w = head;
+   unsigned pos = 0;
+   while (w) {
+      if (w->rebind(args->retrieve_entry(pos), xsink))
+	 return -1;
+      w = w->next;
+      ++pos;
+   }
+   
+   return bindArgs(xsink);
+}
+
+int QoreMysqlBindGroup::prepareAndBind(const QoreString* ostr, const QoreListNode* args, ExceptionSink* xsink) {
    // create copy of string and convert encoding if necessary
    str = ostr->convertEncoding(ds->getQoreEncoding(), xsink);
    if (!str)
@@ -441,47 +515,18 @@ int QoreMySQLBindGroup::prepare_and_bind(const QoreString *ostr, const QoreListN
    //printd(5, "mysql prepare: (%d) %s\n", str->strlen(), str->getBuffer());
 
    // prepare the statement for execution
-   if (mysql_stmt_prepare(stmt, str->getBuffer(), str->strlen())) {
-      int en = mydata->q_errno();
-      if (en != CR_SERVER_GONE_ERROR) {
-	 if (en == ER_UNSUPPORTED_PS)
-	    return 1;
-	 xsink->raiseException("DBI:MYSQL:STATEMENT-ERROR", "error %d: %s", en, mydata->error());
-	 return -1;
-      }
-
-      if (mydata->reconnect(ds, stmt, str, xsink))
-	 return -1;
-   }
+   int rc = prepare(true, xsink);
+   if (rc)
+      return rc;
 
    // if there is data to bind, then bind it
-   if (len) {
-      // allocate bind buffer
-      bind = new MYSQL_BIND[len];
-      // zero out bind memory
-      memset(bind, 0, sizeof(MYSQL_BIND) * len);
-
-      // bind all values/placeholders
-      QoreMySQLBindNode *w = head;
-      int pos = 0;
-      while (w) {
-	 printd(5, "MBG::MBG() binding value at position %d (%s)\n", pos, w->data.value ? w->data.value->getTypeName() : "<null>");
-	 if (w->bindValue(ds->getQoreEncoding(), &bind[pos], xsink))
-	    return -1;
-	 pos++;
-	 w = w->next;
-      }
-   }
-   // now perform the bind
-   if (mysql_stmt_bind_param(stmt, bind)) {
-      xsink->raiseException("DBI:MYSQL-ERROR", "error %d: %s", mydata->q_errno(), mydata->error());
+   if (bindArgs(xsink))
       return -1;
-   }
 
    return 0;
 }
 
-inline int QoreMySQLBindGroup::parse(const QoreListNode *args, ExceptionSink *xsink) {
+inline int QoreMysqlBindGroup::parse(const QoreListNode* args, ExceptionSink* xsink) {
    char quote = 0;
 
    const char *p = str->getBuffer();
@@ -489,7 +534,7 @@ inline int QoreMySQLBindGroup::parse(const QoreListNode *args, ExceptionSink *xs
    QoreString tmp(ds->getQoreEncoding());
    while (*p) {
       if (!quote && (*p) == '%') { // found value marker
-	 const AbstractQoreNode *v = args ? args->retrieve_entry(index++) : NULL;
+	 const AbstractQoreNode* v = args ? args->retrieve_entry(index++) : NULL;
 	 int offset = p - str->getBuffer();
 
 	 p++;
@@ -523,8 +568,8 @@ inline int QoreMySQLBindGroup::parse(const QoreListNode *args, ExceptionSink *xs
 	 str->replace(offset, 2, "?");
 	 p = str->getBuffer() + offset;
 
-	 printd(5, "QoreMySQLBindGroup::parse() newstr=%s\n", str->getBuffer());
-	 printd(5, "QoreMySQLBindGroup::parse() adding value type=%s\n",v ? v->getTypeName() : "<NULL>");
+	 printd(5, "QoreMysqlBindGroup::parse() newstr=%s\n", str->getBuffer());
+	 printd(5, "QoreMysqlBindGroup::parse() adding value type=%s\n",v ? v->getTypeName() : "<NULL>");
 	 add(v);
       }
       else if (!quote && (*p) == ':') { // found placeholder marker
@@ -539,7 +584,7 @@ inline int QoreMySQLBindGroup::parse(const QoreListNode *args, ExceptionSink *xs
 	 while (isalnum(*p) || (*p) == '_')
 	    tstr.concat(*(p++));
 
-	 printd(5, "QoreMySQLBindGroup::parse() adding placeholder for '%s'\n", tstr.getBuffer());
+	 printd(5, "QoreMysqlBindGroup::parse() adding placeholder for '%s'\n", tstr.getBuffer());
 	 add(tstr.giveBuffer());
 
 	 // substitute "@" for ":" in bind name
@@ -547,7 +592,7 @@ inline int QoreMySQLBindGroup::parse(const QoreListNode *args, ExceptionSink *xs
 	 int offset = w - str->getBuffer();
 	 str->replace(offset, 1, "@");
 
-	 printd(5, "QoreMySQLBindGroup::parse() offset=%d, new str=%s\n", offset, str->getBuffer());
+	 printd(5, "QoreMysqlBindGroup::parse() offset=%d, new str=%s\n", offset, str->getBuffer());
       }
       else if (((*p) == '\'') || ((*p) == '\"')) {
 	 if (!quote)
@@ -563,51 +608,51 @@ inline int QoreMySQLBindGroup::parse(const QoreListNode *args, ExceptionSink *xs
    return 0;
 }
 
-inline AbstractQoreNode *QoreMySQLBindGroup::getOutputHash(ExceptionSink *xsink) {
-   ReferenceHolder<QoreHashNode> h(new QoreHashNode(), xsink);
+QoreHashNode* QoreMysqlBindGroup::getOutputHash(ExceptionSink* xsink) {
+   ReferenceHolder<QoreHashNode> h(new QoreHashNode, xsink);
 
    cstr_vector_t::iterator sli = phl.begin();
    while (sli != phl.end()) {
-      // prepare statement to retrieve values
-      mysql_stmt_close(stmt);
-      stmt = mydata->stmt_init(xsink);
-      if (!stmt)
+      // setup a temporary statement to retrieve values
+      MYSQL_STMT *tmp_stmt = mydata->stmt_init(xsink);
+      if (!tmp_stmt)
 	 return 0;
-      
+      ON_BLOCK_EXIT(mysql_stmt_close, tmp_stmt);
+  
       QoreString qstr;
       qstr.sprintf("select @%s", *sli);
 
       // prepare the statement for execution
-      if (mysql_stmt_prepare(stmt, qstr.getBuffer(), qstr.strlen())) {
+      if (mysql_stmt_prepare(tmp_stmt, qstr.getBuffer(), qstr.strlen())) {
 	 xsink->raiseException("DBI:MYSQL:ERROR", mydata->error());
 	 return 0;
       }
 
-      AbstractQoreNode *v = NULL;
+      AbstractQoreNode* v = NULL;
 
-      MYSQL_RES *res = mysql_stmt_result_metadata(stmt);
-      if (res) {
-	 MyResult myres(res, mydata);
-
-	 if (mysql_stmt_execute(stmt)) {
+      MyResult tmpres(mydata, ds->getQoreEncoding());
+      tmpres.set(tmp_stmt);
+      // don't even execute the statement if there is no result data
+      if (tmpres) {
+	 // execute the temporary statement
+	 if (mysql_stmt_execute(tmp_stmt)) {
 	    xsink->raiseException("DBI:MYSQL:ERROR", mydata->error());
-	    return NULL;
+	    return 0;
 	 }
 
-	 int rows = mysql_stmt_affected_rows(stmt);
+	 int rows = mysql_stmt_affected_rows(tmp_stmt);
 	 if (rows) {
-	    myres.bind(stmt);
+	    tmpres.bind(tmp_stmt);
 
 	    if (rows > 1) {
-	       QoreListNode *l = new QoreListNode();
-	       while (!mysql_stmt_fetch(stmt))
-		  l->push(myres.getBoundColumnValue(ds->getQoreEncoding(), 0));
+	       QoreListNode* l = new QoreListNode;
+	       while (!mysql_stmt_fetch(tmp_stmt))
+		  l->push(tmpres.getBoundColumnValue(0, true));
 	       v = l;
 	    }
-	    else
-	    {
-	       mysql_stmt_fetch(stmt);
-	       v = myres.getBoundColumnValue(ds->getQoreEncoding(), 0);
+	    else {
+	       mysql_stmt_fetch(tmp_stmt);
+	       v = tmpres.getBoundColumnValue(0, true);
 	    }
 	 }
       }
@@ -618,115 +663,129 @@ inline AbstractQoreNode *QoreMySQLBindGroup::getOutputHash(ExceptionSink *xsink)
    return h.release();
 }
 
-AbstractQoreNode *QoreMySQLBindGroup::execIntern(ExceptionSink *xsink) {
-   AbstractQoreNode *rv = NULL;
-   MYSQL_RES *res = mysql_stmt_result_metadata(stmt);
-   if (res) {
-      MyResult myres(res, mydata);
+int QoreMysqlBindGroup::execIntern(ExceptionSink* xsink) {
+   assert(stmt);
+   myres.reset();
 
-      if (mysql_stmt_execute(stmt)) {
-	 xsink->raiseException("DBI:MYSQL:ERROR", mydata->error());
-	 return NULL;
+   if (mysql_stmt_execute(stmt)) {
+      xsink->raiseException("DBI:MYSQL:ERROR", mydata->error());
+      return -1;
+   }
+
+   myres.set(stmt);
+
+   return 0;
+}
+
+int QoreMysqlBindGroup::getDataRows(QoreListNode& l, ExceptionSink* xsink, int max) {
+   // row count
+   int c = 0;
+   while ((max < 0 || c < max) && !mysql_stmt_fetch(stmt)) {
+      l.push(myres.getSingleRow(xsink));
+      assert(!*xsink);
+      ++c;
+   }
+
+   return 0;
+}
+
+int QoreMysqlBindGroup::getDataColumns(QoreHashNode& h, ExceptionSink* xsink, int max) {
+   assert(!h.empty());
+
+   // row count
+   int c = 0;
+   while ((max < 0 || c < max) && !mysql_stmt_fetch(stmt)) {
+      HashIterator hi(h);
+      int i = 0;
+      while (hi.next()) {
+	 QoreListNode* l = reinterpret_cast<QoreListNode*>(hi.getValue());
+	 l->push(myres.getBoundColumnValue(i++));
       }
+      ++c;
+   }
 
-      QoreHashNode *h = new QoreHashNode();
-      const QoreEncoding *enc = ds->getQoreEncoding();
+   return 0;
+}
+
+AbstractQoreNode* QoreMysqlBindGroup::exec(ExceptionSink* xsink) {
+   if (execIntern(xsink))
+      return 0;
+
+   if (myres) {
+      ReferenceHolder<QoreHashNode> h(myres.setupColumns(), xsink);
+	 
+      if (!mysql_stmt_affected_rows(stmt))
+	 return h.release();
+
+      myres.bind(stmt);
+
+      return getDataColumns(**h, xsink) ? 0 : h.release();
+   }
+
+   return !hasOutput 
+      ? (AbstractQoreNode*)new QoreBigIntNode((int64)mysql_stmt_affected_rows(stmt))
+      : (AbstractQoreNode*)getOutputHash(xsink);
+}
+
+AbstractQoreNode* QoreMysqlBindGroup::selectRows(ExceptionSink* xsink) {
+   if (execIntern(xsink))
+      return 0;
+
+   if (myres) {
+      ReferenceHolder<QoreListNode> l(new QoreListNode, xsink);
+
+      if (!mysql_stmt_affected_rows(stmt))
+	 return l.release();
+
+      myres.bind(stmt);
+
+      return getDataRows(**l, xsink) ? 0 : l.release();
+   }
+
+   return !hasOutput
+      ? (AbstractQoreNode*)new QoreBigIntNode((int64)mysql_stmt_affected_rows(stmt))
+      : (AbstractQoreNode*)getOutputHash(xsink);
+}
+
+QoreHashNode* QoreMysqlBindGroup::selectRow(ExceptionSink* xsink) {
+   if (execIntern(xsink))
+      return 0;
+
+   if (myres) {
+      my_ulonglong rowcnt = mysql_stmt_affected_rows(stmt);
+      if (!rowcnt)
+	 return 0;
+      
+      myres.bind(stmt);
+
       QoreString tstr;
+      const QoreEncoding* enc = ds->getQoreEncoding();
+      
+      if (!mysql_stmt_fetch(stmt)) {
+	 ReferenceHolder<QoreHashNode> h(new QoreHashNode, xsink);
 	 
-      for (int i = 0; i < myres.getNumFields(); i++) {
-	 getLowerCaseName(&tstr, enc, myres.getFieldName(i));
-	 h->setKeyValue(&tstr, new QoreListNode(), xsink);
-      }
+	 for (int i = 0; i < myres.getNumFields(); i++) {
+	    get_lower_case_name(&tstr, enc, myres.getFieldName(i));
+	    h->setKeyValue(&tstr, myres.getBoundColumnValue(i, true), xsink);
+	 }
+
+	 // see if there is a second row
+	 if (!mysql_stmt_fetch(stmt)) {
+	    xsink->raiseException("MYSQL-SELECT-ROW-ERROR", "SQL passed to selectRow() returned more than 1 row (%d rows)", (int)rowcnt);
+	    return 0;
+	 }
 	 
-      if (mysql_stmt_affected_rows(stmt)) {
-	 myres.bind(stmt);
-	    
-	 while (!mysql_stmt_fetch(stmt)) {
-	    HashIterator hi(h);
-	    int i = 0;
-	    while (hi.next()) {
-	       QoreListNode *l = reinterpret_cast<QoreListNode *>(hi.getValue());
-	       l->push(myres.getBoundColumnValue(enc, i++));
-	    }
-	 }
-      }
-      rv = h;
-   }
-   else {
-      // there is no result set
-      if (mysql_stmt_execute(stmt)) {
-	 xsink->raiseException("DBI:MYSQL:ERROR", mydata->error());
-	 return NULL;
+	 return h.release();
       }
 
-      if (!hasOutput)
-	 rv = new QoreBigIntNode((int64)mysql_stmt_affected_rows(stmt));
-      else
-	 rv = getOutputHash(xsink);
+      return 0;
    }
 
-   return rv;
+   return hasOutput ? getOutputHash(xsink) : 0;
 }
 
-inline AbstractQoreNode *QoreMySQLBindGroup::exec(ExceptionSink *xsink) {
-   return execIntern(xsink);
-}
-
-inline AbstractQoreNode *QoreMySQLBindGroup::select(ExceptionSink *xsink) {
-   return execIntern(xsink);
-}
-
-AbstractQoreNode *QoreMySQLBindGroup::selectRows(ExceptionSink *xsink) {
-   AbstractQoreNode *rv = NULL;
-   MYSQL_RES *res = mysql_stmt_result_metadata(stmt);
-   if (res) {
-      MyResult myres(res, mydata);
-
-      if (mysql_stmt_execute(stmt)) {
-	 xsink->raiseException("DBI:MYSQL:ERROR", mydata->error());
-	 return NULL;
-      }
-
-      QoreListNode *l = new QoreListNode();
-
-      if (mysql_stmt_affected_rows(stmt)) {
-	 myres.bind(stmt);
-
-	 QoreString tstr;
-	 const QoreEncoding *enc = ds->getQoreEncoding();
-
-	 while (!mysql_stmt_fetch(stmt)) {
-	    QoreHashNode *h = new QoreHashNode();
-
-	    for (int i = 0; i < myres.getNumFields(); i++) {
-	       getLowerCaseName(&tstr, enc, myres.getFieldName(i));
-	       h->setKeyValue(&tstr, myres.getBoundColumnValue(enc, i), xsink);
-	    }
-
-	    l->push(h);
-	 }
-      }
-
-      rv = l;
-   }
-   else {
-      // there is no result set
-      if (mysql_stmt_execute(stmt)) {
-	 xsink->raiseException("DBI:MYSQL:ERROR", mydata->error());
-	 return NULL;
-      }
-
-      if (!hasOutput)
-	 rv = new QoreBigIntNode((int64)mysql_stmt_affected_rows(stmt));
-      else
-	 rv = getOutputHash(xsink);
-   }
-
-   return rv;
-}
-
-int QoreMySQLBindNode::bindValue(const QoreEncoding *enc, MYSQL_BIND *buf, ExceptionSink *xsink) {
-   //printd(5, "QoreMySQLBindNode::bindValue() type=%s\n", data.value ? data.value->getTypeName() : "NOTHING");
+int QoreMysqlBindNode::bindValue(const QoreEncoding* enc, MYSQL_BIND* buf, ExceptionSink* xsink) {
+   //printd(5, "QoreMysqlBindNode::bindValue() type=%s\n", data.value ? data.value->getTypeName() : "NOTHING");
 
    // bind a NULL value
    if (is_nothing(data.value) || is_null(data.value)) {
@@ -737,7 +796,7 @@ int QoreMySQLBindNode::bindValue(const QoreEncoding *enc, MYSQL_BIND *buf, Excep
    qore_type_t ntype = data.value->getType();
 
    if (ntype == NT_STRING) {
-      QoreStringNode *bstr = const_cast<QoreStringNode *>(reinterpret_cast<const QoreStringNode *>(data.value));
+      QoreStringNode* bstr = const_cast<QoreStringNode*>(reinterpret_cast<const QoreStringNode*>(data.value));
       // convert to the db charset if necessary
       if (bstr->getEncoding() != enc) {
 	 bstr = bstr->convertEncoding(enc, xsink);
@@ -757,7 +816,7 @@ int QoreMySQLBindNode::bindValue(const QoreEncoding *enc, MYSQL_BIND *buf, Excep
    }
 
    if (ntype == NT_DATE) {
-      const DateTimeNode *date = reinterpret_cast<const DateTimeNode *>(data.value);
+      const DateTimeNode* date = reinterpret_cast<const DateTimeNode*>(data.value);
       vbuf.assign(*date);
       
       buf->buffer_type = MYSQL_TYPE_DATETIME;
@@ -767,17 +826,17 @@ int QoreMySQLBindNode::bindValue(const QoreEncoding *enc, MYSQL_BIND *buf, Excep
 
    
    if (ntype == NT_BINARY) {
-      const BinaryNode *b = reinterpret_cast<const BinaryNode *>(data.value);
+      const BinaryNode* b = reinterpret_cast<const BinaryNode*>(data.value);
       len = b->size();
       buf->buffer_type = MYSQL_TYPE_BLOB;
-      buf->buffer = (void *)b->getPtr();
+      buf->buffer = (void*)b->getPtr();
       buf->buffer_length = len;
       buf->length = &len;
       return 0;
    }
 
    if (ntype == NT_BOOLEAN) {
-      vbuf.i4 = reinterpret_cast<const QoreBoolNode *>(data.value)->getValue();
+      vbuf.i4 = reinterpret_cast<const QoreBoolNode*>(data.value)->getValue();
       buf->buffer_type = MYSQL_TYPE_LONG;
       buf->buffer = (char *)&vbuf.i4;
       return 0;
@@ -785,184 +844,441 @@ int QoreMySQLBindNode::bindValue(const QoreEncoding *enc, MYSQL_BIND *buf, Excep
    
    if (ntype == NT_INT) {
       buf->buffer_type = MYSQL_TYPE_LONGLONG;
-      buf->buffer = (char *)&(reinterpret_cast<const QoreBigIntNode *>(data.value))->val;
+      buf->buffer = (char *)&(reinterpret_cast<const QoreBigIntNode*>(data.value))->val;
       return 0;
    }
 
-   if (ntype == NT_FLOAT)
-   {
+   if (ntype == NT_FLOAT) {
       buf->buffer_type = MYSQL_TYPE_DOUBLE;
-      buf->buffer = (char *)&(reinterpret_cast<const QoreFloatNode *>(data.value)->f);
+      buf->buffer = (char *)&(reinterpret_cast<const QoreFloatNode*>(data.value)->f);
       return 0;
    }
+
+#ifdef _QORE_HAS_NUMBER_TYPE
+   if (ntype == NT_NUMBER) {
+      const QoreNumberNode* num = reinterpret_cast<const QoreNumberNode*>(data.value);
+
+      // create string for binding (will be deleted later)
+      data.tstr = new QoreStringNode;
+      // convert number to string
+      num->getStringRepresentation(*data.tstr);
+
+      len = data.tstr->strlen();
+      
+      buf->buffer_type = MYSQL_TYPE_STRING;
+      buf->buffer = (char *)data.tstr->getBuffer();
+      buf->buffer_length = len + 1;
+      buf->length = &len;
+      return 0;
+   }
+#endif
 
    xsink->raiseException("DBI-EXEC-EXCEPTION", "type '%s' is not supported for SQL binding", data.value->getTypeName());
    return -1;
 }
 
+#ifdef _QORE_HAS_PREPARED_STATMENT_API
+int QoreMysqlPreparedStatement::prepare(const QoreString& n_sql, const QoreListNode* args, bool n_parse, ExceptionSink* xsink) {
+   assert(!str);
+   // create copy of string and convert encoding if necessary
+   str = n_sql.convertEncoding(ds->getQoreEncoding(), xsink);
+   if (*xsink)
+      return -1;
+
+   if (n_parse && parse(args, xsink))
+      return -1;
+
+   if (QoreMysqlBindGroup::prepare(false, xsink))
+      return -1;
+
+   return bindArgs(xsink);
+}
+
+int QoreMysqlPreparedStatement::bind(const QoreListNode &l, ExceptionSink *xsink) {
+   return rebindArgs(&l, xsink);
+}
+
+int QoreMysqlPreparedStatement::define(ExceptionSink *xsink) {
+   //printd(5, "QoreMysqlPreparedStatement::define() this: %p myres: %d\n", this, (bool)myres);
+   if (myres)
+      myres.bind(stmt);
+   return 0;
+}
+
+int QoreMysqlPreparedStatement::exec(ExceptionSink* xsink) {
+   return execIntern(xsink);
+}
+
+QoreHashNode* QoreMysqlPreparedStatement::fetchRow(ExceptionSink* xsink) {
+   if (!myres) {
+      xsink->raiseException("DBI:MYSQL-FETCH-ROW-ERROR", "call SQLStatement::next() before calling SQLStatement::fetchRow()");
+      return 0;
+   }
+   return myres.getSingleRow(xsink);
+}
+
+QoreListNode* QoreMysqlPreparedStatement::fetchRows(int rows, ExceptionSink *xsink) {
+   ReferenceHolder<QoreListNode> l(new QoreListNode, xsink);
+   return !getDataRows(**l, xsink, rows) ? l.release() : 0;
+}
+
+QoreHashNode* QoreMysqlPreparedStatement::fetchColumns(int rows, ExceptionSink *xsink) {
+   ReferenceHolder<QoreHashNode> h(myres.setupColumns(), xsink);
+   return !getDataColumns(**h, xsink) ? h.release() : 0;
+}
+
+bool QoreMysqlPreparedStatement::next() {
+   assert(stmt);
+   return !mysql_stmt_fetch(stmt);
+}
+
+static int mysql_stmt_api_prepare(SQLStatement* stmt, const QoreString& str, const QoreListNode* args, ExceptionSink* xsink) {
+   assert(!stmt->getPrivateData());
+
+   QoreMysqlPreparedStatement* bg = new QoreMysqlPreparedStatement(stmt->getDatasource());
+   stmt->setPrivateData(bg);
+
+   return bg->prepare(str, args, true, xsink);
+}
+
+static int mysql_stmt_api_prepare_raw(SQLStatement* stmt, const QoreString& str, ExceptionSink* xsink) {
+   assert(!stmt->getPrivateData());
+
+   QoreMysqlPreparedStatement* bg = new QoreMysqlPreparedStatement(stmt->getDatasource());
+   stmt->setPrivateData(bg);
+
+   return bg->prepare(str, 0, false, xsink);
+}
+
+static int mysql_stmt_api_bind(SQLStatement* stmt, const QoreListNode& l, ExceptionSink* xsink) {
+   QoreMysqlPreparedStatement* bg = (QoreMysqlPreparedStatement*)stmt->getPrivateData();
+   assert(bg);
+
+   return bg->bind(l, xsink);
+}
+
+static int mysql_stmt_api_bind_placeholders(SQLStatement* stmt, const QoreListNode& l, ExceptionSink* xsink) {
+   xsink->raiseException("DBI:PGSQL-BIND-PLACEHHODERS-ERROR", "binding placeholders is not necessary or supported with the pgsql driver");
+   return -1;
+}
+
+static int mysql_stmt_api_bind_values(SQLStatement* stmt, const QoreListNode& l, ExceptionSink* xsink) {
+   QoreMysqlPreparedStatement* bg = (QoreMysqlPreparedStatement*)stmt->getPrivateData();
+   assert(bg);
+
+   return bg->bind(l, xsink);
+}
+
+static int mysql_stmt_api_exec(SQLStatement* stmt, ExceptionSink* xsink) {
+   QoreMysqlPreparedStatement* bg = (QoreMysqlPreparedStatement*)stmt->getPrivateData();
+   assert(bg);
+
+   return bg->exec(xsink);
+}
+
+static int mysql_stmt_api_define(SQLStatement* stmt, ExceptionSink* xsink) {
+   QoreMysqlPreparedStatement* bg = (QoreMysqlPreparedStatement*)stmt->getPrivateData();
+   assert(bg);
+
+   return bg->define(xsink);
+}
+
+static int mysql_stmt_api_affected_rows(SQLStatement* stmt, ExceptionSink* xsink) {
+   QoreMysqlPreparedStatement* bg = (QoreMysqlPreparedStatement*)stmt->getPrivateData();
+   assert(bg);
+
+   return bg->affectedRows();
+}
+
+static QoreHashNode* mysql_stmt_api_get_output(SQLStatement* stmt, ExceptionSink* xsink) {
+   QoreMysqlPreparedStatement* bg = (QoreMysqlPreparedStatement*)stmt->getPrivateData();
+   assert(bg);
+
+   return bg->getOutputHash(xsink);
+}
+
+static QoreHashNode* mysql_stmt_api_get_output_rows(SQLStatement* stmt, ExceptionSink* xsink) {
+   QoreMysqlPreparedStatement* bg = (QoreMysqlPreparedStatement*)stmt->getPrivateData();
+   assert(bg);
+
+   return bg->getOutputHash(xsink);
+}
+
+static QoreHashNode* mysql_stmt_api_fetch_row(SQLStatement* stmt, ExceptionSink* xsink) {
+   QoreMysqlPreparedStatement* bg = (QoreMysqlPreparedStatement*)stmt->getPrivateData();
+   assert(bg);
+
+   return bg->fetchRow(xsink);
+}
+
+static QoreListNode* mysql_stmt_api_fetch_rows(SQLStatement* stmt, int rows, ExceptionSink* xsink) {
+   QoreMysqlPreparedStatement* bg = (QoreMysqlPreparedStatement*)stmt->getPrivateData();
+   assert(bg);
+
+   return bg->fetchRows(rows, xsink);
+}
+
+static QoreHashNode* mysql_stmt_api_fetch_columns(SQLStatement* stmt, int rows, ExceptionSink* xsink) {
+   QoreMysqlPreparedStatement* bg = (QoreMysqlPreparedStatement*)stmt->getPrivateData();
+   assert(bg);
+
+   return bg->fetchColumns(rows, xsink);
+}
+
+static bool mysql_stmt_api_next(SQLStatement* stmt, ExceptionSink* xsink) {
+   QoreMysqlPreparedStatement* bg = (QoreMysqlPreparedStatement*)stmt->getPrivateData();
+   assert(bg);
+
+   return bg->next();
+}
+
+static int mysql_stmt_api_close(SQLStatement* stmt, ExceptionSink* xsink) {
+   QoreMysqlPreparedStatement* bg = (QoreMysqlPreparedStatement*)stmt->getPrivateData();
+   assert(bg);
+
+   bg->reset(xsink);
+   delete bg;
+   stmt->setPrivateData(0);
+   return *xsink ? -1 : 0;
+}
+#endif
+
 #endif // !HAVE_MYSQL_STMT
 
-static QoreHashNode *get_result_set(const Datasource *ds, MYSQL_RES *res, ExceptionSink *xsink) {
+static AbstractQoreNode* mysql_to_qore(const MYSQL_FIELD& f, char* row, const Datasource* ds) {
+   // some basic type checking
+   switch (f.type) {
+      // for integer values
+      case FIELD_TYPE_SHORT:
+      case FIELD_TYPE_LONG:
+      case FIELD_TYPE_INT24:
+      case FIELD_TYPE_TINY:
+	 return new QoreBigIntNode(atoi(row));
+	       
+      // for floating point values
+      case FIELD_TYPE_FLOAT:
+      case FIELD_TYPE_DOUBLE:
+	 return new QoreFloatNode(atof(row));
+	       
+      // for datetime values
+      case FIELD_TYPE_DATETIME: {
+	 row[4]  = '\0';
+	 row[7]  = '\0';
+	 row[10] = '\0';
+	 row[13] = '\0';
+	 row[16] = '\0';
+
+	 return new DateTimeNode(atoi(row), atoi(row + 5), atoi(row + 8), atoi(row + 11), atoi(row + 14), atoi(row + 17));
+      }
+
+      // for date values
+      case FIELD_TYPE_DATE: {
+	 row[4] = '\0';
+	 row[7] = '\0';
+	 return new DateTimeNode(atoi(row), atoi(row + 5), atoi(row + 8), 0, 0, 0);
+      }
+	    
+      // for time values
+      case FIELD_TYPE_TIME: {
+	 row[2] = '\0';
+	 row[5] = '\0';
+	 return new DateTimeNode(0, 0, 0, atoi(row), atoi(row + 3), atoi(row + 6));
+      }
+
+      case FIELD_TYPE_TIMESTAMP:
+	 return new DateTimeNode(row);
+
+      // to avoid warning about unhandled types
+      default:
+	 break;
+   }
+
+   // the rest defaults to string
+   return new QoreStringNode(row, ds->getQoreEncoding());
+}
+
+static QoreHashNode* get_result_set(const Datasource* ds, MYSQL_RES *res, ExceptionSink* xsink, bool single_row = false) {
    MYSQL_ROW row;
    int num_fields = mysql_num_fields(res);
-   QoreHashNode *h = new QoreHashNode();
+   ReferenceHolder<QoreHashNode> h(new QoreHashNode, xsink);
    
    // get column names and set up column lists
    MYSQL_FIELD *field = mysql_fetch_fields(res);
 
    QoreString tstr;
-   for (int i = 0; i < num_fields; i++) {
-      getLowerCaseName(&tstr, ds->getQoreEncoding(), field[i].name);
-      h->setKeyValue(&tstr, new QoreListNode(), xsink);
+   if (!single_row) {
+      for (int i = 0; i < num_fields; i++) {
+	 get_lower_case_name(&tstr, ds->getQoreEncoding(), field[i].name);
+	 h->setKeyValue(&tstr, new QoreListNode, xsink);
+      }
    }
    
    int rn = 0;
    while ((row = mysql_fetch_row(res))) {
-      for (int i = 0; i < num_fields; i++) {
-	 AbstractQoreNode *n;
-	 // some basic type checking
-	 switch (field[i].type) {
-	    // for integer values
-	    case FIELD_TYPE_SHORT:
-	    case FIELD_TYPE_LONG:
-	    case FIELD_TYPE_INT24:
-	    case FIELD_TYPE_TINY:
-	       n = new QoreBigIntNode(atoi(row[i]));
-	       break;
-	       
-	       // for floating point values
-	    case FIELD_TYPE_FLOAT:
-	    case FIELD_TYPE_DOUBLE:
-	       n = new QoreFloatNode(atof(row[i]));
-	       break;
-	       
-	       // for datetime values
-	    case FIELD_TYPE_DATETIME: {
-	       row[i][4]  = '\0';
-	       row[i][7]  = '\0';
-	       row[i][10] = '\0';
-	       row[i][13] = '\0';
-	       row[i][16] = '\0';
-
-	       n = new DateTimeNode(atoi(row[i]), atoi(row[i] + 5), atoi(row[i] + 8), atoi(row[i] + 11), atoi(row[i] + 14), atoi(row[i] + 17));
-	       break;
-	    }
-
-	    // for date values
-	    case FIELD_TYPE_DATE: {
-	       row[i][4] = '\0';
-	       row[i][7] = '\0';
-	       n = new DateTimeNode(atoi(row[i]), atoi(row[i] + 5), atoi(row[i] + 8), 0, 0, 0);
-	       break;
-	    }
-	    
-	    // for time values
-	    case FIELD_TYPE_TIME: {
-	       row[i][2] = '\0';
-	       row[i][5] = '\0';
-	       n = new DateTimeNode(0, 0, 0, atoi(row[i]), atoi(row[i] + 3), atoi(row[i] + 6));
-	       break;
-	    }
-
-	    case FIELD_TYPE_TIMESTAMP:
-	       n = new DateTimeNode(row[i]);
-	       break;
-	    
-	    // the rest defaults to string
-	    default:
-	       n = new QoreStringNode(row[i], ds->getQoreEncoding());
-	       break;
-	 }
-	 //printd(5, "get_result_set() row %d col %d: %s (type=%d)=\"%s\"\n", rn, i, field[i].name, field[i].type, row[i]);
-	 QoreListNode *l = reinterpret_cast<QoreListNode *>(h->getKeyValue(field[i].name));
-	 l->push(n);
-      }
       rn++;
+      if (single_row && rn > 1) {
+	 xsink->raiseException("MYSQL-SELECT-ROW-ERROR", "SQL passed to selectRow() returned more than 1 row");
+	 return 0;
+      }
+      for (int i = 0; i < num_fields; i++) {
+	 AbstractQoreNode* n = mysql_to_qore(field[i], row[i], ds);
+	 //printd(5, "get_result_set() row %d col %d: %s (type=%d)=\"%s\"\n", rn, i, field[i].name, field[i].type, row[i]);
+	 if (single_row) {
+	    get_lower_case_name(&tstr, ds->getQoreEncoding(), field[i].name);
+	    h->setKeyValue(&tstr, n, xsink);
+	 }
+	 else {
+	    QoreListNode* l = reinterpret_cast<QoreListNode*>(h->getKeyValue(field[i].name));
+	    l->push(n);
+	 }
+      }
    }
-   return h;
+
+   return h.release();
 }
 
-static AbstractQoreNode *qore_mysql_do_sql(const Datasource *ds, const QoreString *qstr, const QoreListNode *args, ExceptionSink *xsink) {
+static QoreListNode* get_result_set_horiz(const Datasource* ds, MYSQL_RES *res, ExceptionSink* xsink) {
+   MYSQL_ROW row;
+   int num_fields = mysql_num_fields(res);
+   ReferenceHolder<QoreListNode> l(new QoreListNode, xsink);
+   
+   // get column names and set up column lists
+   MYSQL_FIELD *field = mysql_fetch_fields(res);
+
+   QoreString tstr;
+   
+   int rn = 0;
+   while ((row = mysql_fetch_row(res))) {
+      rn++;
+      ReferenceHolder<QoreHashNode> h(new QoreHashNode, xsink);
+      
+      for (int i = 0; i < num_fields; i++) {
+	 get_lower_case_name(&tstr, ds->getQoreEncoding(), field[i].name);
+	 h->setKeyValue(&tstr, mysql_to_qore(field[i], row[i], ds), xsink);
+      }
+      // add row to output
+      l->push(h.release());
+   }
+
+   return l.release();
+}
+
+static AbstractQoreNode* qore_mysql_do_sql(const Datasource* ds, const QoreString* qstr, const QoreListNode* args, ExceptionSink* xsink, bool horiz = false) {
    QORE_TRACE("qore_mysql_do_sql()");
 
    TempEncodingHelper tqstr(qstr, ds->getQoreEncoding(), xsink);
    if (!tqstr)
-      return NULL;
+      return 0;
    
-   QoreMySQLConnection *d_mysql =(QoreMySQLConnection *)ds->getPrivateData();
-   MYSQL *db = d_mysql->db;
+   QoreMysqlConnection* d_mysql =(QoreMysqlConnection *)ds->getPrivateData();
+   MYSQL* db = d_mysql->db;
    
    if (mysql_query(db, tqstr->getBuffer())) {
       xsink->raiseException("DBI:MYSQL:SELECT-ERROR", (char *)mysql_error(db));
-      return NULL;
+      return 0;
    }
 
-   AbstractQoreNode *rv;
-   if (mysql_field_count(db) > 0) {
-      MYSQL_RES *res = mysql_store_result(db);
+   if (!mysql_field_count(db))
+      return new QoreBigIntNode(mysql_affected_rows(db));
 
-      if (!res) {
-	 xsink->raiseException("DBI:MYSQL:SELECT-ERROR", (char *)mysql_error(db));
-	 return NULL;
-      }
-      rv = get_result_set(ds, res, xsink);
-      mysql_free_result(res);
+   MYSQL_RES* res = mysql_store_result(db);
+   if (!res) {
+      xsink->raiseException("DBI:MYSQL:SELECT-ERROR", (char *)mysql_error(db));
+      return 0;
    }
-   else {
-      rv = new QoreBigIntNode(mysql_affected_rows(db));
-   }
-#ifdef HAVE_MYSQL_COMMIT
-   if (ds->getAutoCommit())
-      mysql_commit(db);
-#endif
+   ON_BLOCK_EXIT(mysql_free_result, res);
 
-   return rv;
+   return horiz 
+      ? (AbstractQoreNode*)get_result_set_horiz(ds, res, xsink) 
+      : (AbstractQoreNode*)get_result_set(ds, res, xsink);
 }
 
-static AbstractQoreNode *qore_mysql_do_sql_horizontal(const Datasource *ds, const QoreString *qstr, const QoreListNode *args, ExceptionSink *xsink) {
-   xsink->raiseException("MYSQL-UNSUPPORTED", "row retrieval not yet implemented for executing MySQL statements without the prepared statement interface");
-   return 0;
+static QoreHashNode* qore_mysql_do_select_row(const Datasource* ds, const QoreString* qstr, const QoreListNode* args, ExceptionSink* xsink) {
+   QORE_TRACE("qore_mysql_do_select_row()");
+
+   TempEncodingHelper tqstr(qstr, ds->getQoreEncoding(), xsink);
+   if (!tqstr)
+      return 0;
+   
+   QoreMysqlConnection* d_mysql =(QoreMysqlConnection *)ds->getPrivateData();
+   MYSQL* db = d_mysql->db;
+   
+   if (mysql_query(db, tqstr->getBuffer())) {
+      xsink->raiseException("DBI:MYSQL:SELECT-ERROR", (char *)mysql_error(db));
+      return 0;
+   }
+
+   if (!mysql_field_count(db))
+      return 0;
+
+   MYSQL_RES* res = mysql_store_result(db);
+   if (!res) {
+      xsink->raiseException("DBI:MYSQL:SELECT-ERROR", (char *)mysql_error(db));
+      return 0;
+   }   
+   ON_BLOCK_EXIT(mysql_free_result, res);
+
+   return get_result_set(ds, res, xsink, true);
 }
 
-static AbstractQoreNode *qore_mysql_select_rows(Datasource *ds, const QoreString *qstr, const QoreListNode *args, ExceptionSink *xsink) {
+static AbstractQoreNode* qore_mysql_select_rows(Datasource* ds, const QoreString* qstr, const QoreListNode* args, ExceptionSink* xsink) {
    checkInit();
 #ifdef HAVE_MYSQL_STMT
-   QoreMySQLBindGroup bg(ds);
-   int rc = bg.prepare_and_bind(qstr, args, xsink);
+   QoreMysqlBindGroupHelper bg(ds, xsink);
+   int rc = bg.prepareAndBind(qstr, args, xsink);
    if (rc == -1)
       return 0;
 
    if (rc == 1)
-      return qore_mysql_do_sql_horizontal(ds, qstr, args, xsink);
+      return qore_mysql_do_sql(ds, qstr, args, xsink, true);
 
    return bg.selectRows(xsink);
 #else
-   return qore_mysql_do_sql_horizontal(ds, qstr, args, xsink);
+   return qore_mysql_do_sql(ds, qstr, args, xsink, true);
 #endif
 }
 
-static AbstractQoreNode *qore_mysql_select(Datasource *ds, const QoreString *qstr, const QoreListNode *args, ExceptionSink *xsink) {
+#ifdef _QORE_HAS_DBI_SELECT_ROW
+static QoreHashNode* qore_mysql_select_row(Datasource* ds, const QoreString* qstr, const QoreListNode* args, ExceptionSink* xsink) {
    checkInit();
 #ifdef HAVE_MYSQL_STMT
-   QoreMySQLBindGroup bg(ds);
-   int rc = bg.prepare_and_bind(qstr, args, xsink);
+   QoreMysqlBindGroupHelper bg(ds, xsink);
+   int rc = bg.prepareAndBind(qstr, args, xsink);
+   if (rc == -1)
+      return 0;
+
+   if (rc == 1)
+      return qore_mysql_do_select_row(ds, qstr, args, xsink);
+
+   return bg.selectRow(xsink);
+#else
+   return qore_mysql_do_sql(ds, qstr, args, xsink, true, true);
+#endif
+}
+#endif
+
+static AbstractQoreNode* qore_mysql_select(Datasource* ds, const QoreString* qstr, const QoreListNode* args, ExceptionSink* xsink) {
+   checkInit();
+#ifdef HAVE_MYSQL_STMT
+   QoreMysqlBindGroupHelper bg(ds, xsink);
+   int rc = bg.prepareAndBind(qstr, args, xsink);
    if (rc == -1)
       return 0;
 
    if (rc == 1)
       return qore_mysql_do_sql(ds, qstr, args, xsink);
 
-   return bg.select(xsink);
+   return bg.exec(xsink);
 #else
    return qore_mysql_do_sql(ds, qstr, args, xsink);
 #endif
 }
 
-static AbstractQoreNode *qore_mysql_exec(Datasource* ds, const QoreString *qstr, const QoreListNode *args, ExceptionSink *xsink) {
+static AbstractQoreNode* qore_mysql_exec(Datasource* ds, const QoreString* qstr, const QoreListNode* args, ExceptionSink* xsink) {
    checkInit();
 #ifdef HAVE_MYSQL_STMT
-   QoreMySQLBindGroup bg(ds);
-   int rc = bg.prepare_and_bind(qstr, args, xsink);
+   QoreMysqlBindGroupHelper bg(ds, xsink);
+   int rc = bg.prepareAndBind(qstr, args, xsink);
    if (rc == -1)
       return 0;
 
@@ -976,21 +1292,21 @@ static AbstractQoreNode *qore_mysql_exec(Datasource* ds, const QoreString *qstr,
 }
 
 #ifdef _QORE_HAS_DBI_EXECRAW
-static AbstractQoreNode *qore_mysql_execRaw(Datasource* ds, const QoreString* qstr, ExceptionSink* xsink) {
+static AbstractQoreNode* qore_mysql_execRaw(Datasource* ds, const QoreString* qstr, ExceptionSink* xsink) {
     checkInit();
     return qore_mysql_do_sql(ds, qstr, 0, xsink);
 }
 #endif
 
-static int qore_mysql_open_datasource(Datasource* ds, ExceptionSink *xsink) {
+static int qore_mysql_open_datasource(Datasource* ds, ExceptionSink* xsink) {
    checkInit();
 
    MYSQL *db = qore_mysql_init(ds, xsink);
    if (!db)
       return -1;
    
-   QoreMySQLConnection *d_mysql = new QoreMySQLConnection(db);
-   ds->setPrivateData((void *)d_mysql);
+   QoreMysqlConnection *d_mysql = new QoreMysqlConnection(db);
+   ds->setPrivateData((void*)d_mysql);
 
    return 0;
 }
@@ -1000,7 +1316,7 @@ static int qore_mysql_close_datasource(Datasource* ds) {
 
    checkInit();
 
-   QoreMySQLConnection *d_mysql = (QoreMySQLConnection*)ds->getPrivateData();
+   QoreMysqlConnection *d_mysql = (QoreMysqlConnection*)ds->getPrivateData();
    
    printd(3, "qore_mysql_close_datasource(): connection to %s closed.\n", ds->getDBName());
    
@@ -1010,31 +1326,31 @@ static int qore_mysql_close_datasource(Datasource* ds) {
    return 0;
 }
 
-static AbstractQoreNode *qore_mysql_get_server_version(Datasource *ds, ExceptionSink *xsink) {
+static AbstractQoreNode* qore_mysql_get_server_version(Datasource* ds, ExceptionSink* xsink) {
    checkInit();
-   QoreMySQLConnection *d_mysql = (QoreMySQLConnection*)ds->getPrivateData();
+   QoreMysqlConnection *d_mysql = (QoreMysqlConnection*)ds->getPrivateData();
    return new QoreBigIntNode(d_mysql->getServerVersion());
 }
 
-static AbstractQoreNode *qore_mysql_get_client_version(const Datasource *ds, ExceptionSink *xsink) {
+static AbstractQoreNode* qore_mysql_get_client_version(const Datasource* ds, ExceptionSink* xsink) {
    checkInit();
    return new QoreBigIntNode(mysql_get_client_version());
 }
 
 #ifdef _QORE_HAS_DBI_OPTIONS
 static int mysql_opt_set(Datasource* ds, const char* opt, const AbstractQoreNode* val, ExceptionSink* xsink) {
-   QoreMySQLConnection* mc = (QoreMySQLConnection*)ds->getPrivateData();
+   QoreMysqlConnection* mc = (QoreMysqlConnection*)ds->getPrivateData();
    mc->setOption(opt, val);
    return 0;
 }
 
 static AbstractQoreNode* mysql_opt_get(const Datasource* ds, const char* opt) {
-   QoreMySQLConnection* mc = (QoreMySQLConnection*)ds->getPrivateData();
+   QoreMysqlConnection* mc = (QoreMysqlConnection*)ds->getPrivateData();
    return mc->getOption(opt);
 }
 #endif
 
-QoreStringNode *qore_mysql_module_init() {
+QoreStringNode* qore_mysql_module_init() {
    // initialize thread key to test for mysql_thread_init()
    pthread_key_create(&ptk_mysql, NULL);
    tclist.push(mysql_thread_cleanup, NULL);
@@ -1051,6 +1367,9 @@ QoreStringNode *qore_mysql_module_init() {
    methods.add(QDBI_METHOD_CLOSE,              qore_mysql_close_datasource);
    methods.add(QDBI_METHOD_SELECT,             qore_mysql_select);
    methods.add(QDBI_METHOD_SELECT_ROWS,        qore_mysql_select_rows);
+#ifdef _QORE_HAS_DBI_SELECT_ROW
+   methods.add(QDBI_METHOD_SELECT_ROW,         qore_mysql_select_row);
+#endif
    methods.add(QDBI_METHOD_EXEC,               qore_mysql_exec);
 #ifdef _QORE_HAS_DBI_EXECRAW
    methods.add(QDBI_METHOD_EXECRAW,            qore_mysql_execRaw);
@@ -1059,6 +1378,24 @@ QoreStringNode *qore_mysql_module_init() {
    methods.add(QDBI_METHOD_ROLLBACK,           qore_mysql_rollback);
    methods.add(QDBI_METHOD_GET_SERVER_VERSION, qore_mysql_get_server_version);
    methods.add(QDBI_METHOD_GET_CLIENT_VERSION, qore_mysql_get_client_version);
+
+#if defined(HAVE_MYSQL_STMT) && defined(_QORE_HAS_PREPARED_STATMENT_API)
+   methods.add(QDBI_METHOD_STMT_PREPARE, mysql_stmt_api_prepare);
+   methods.add(QDBI_METHOD_STMT_PREPARE_RAW, mysql_stmt_api_prepare_raw);
+   methods.add(QDBI_METHOD_STMT_BIND, mysql_stmt_api_bind);
+   methods.add(QDBI_METHOD_STMT_BIND_PLACEHOLDERS, mysql_stmt_api_bind_placeholders);
+   methods.add(QDBI_METHOD_STMT_BIND_VALUES, mysql_stmt_api_bind_values);
+   methods.add(QDBI_METHOD_STMT_EXEC, mysql_stmt_api_exec);
+   methods.add(QDBI_METHOD_STMT_DEFINE, mysql_stmt_api_define);
+   methods.add(QDBI_METHOD_STMT_FETCH_ROW, mysql_stmt_api_fetch_row);
+   methods.add(QDBI_METHOD_STMT_FETCH_ROWS, mysql_stmt_api_fetch_rows);
+   methods.add(QDBI_METHOD_STMT_FETCH_COLUMNS, mysql_stmt_api_fetch_columns);
+   methods.add(QDBI_METHOD_STMT_NEXT, mysql_stmt_api_next);
+   methods.add(QDBI_METHOD_STMT_CLOSE, mysql_stmt_api_close);
+   methods.add(QDBI_METHOD_STMT_AFFECTED_ROWS, mysql_stmt_api_affected_rows);
+   methods.add(QDBI_METHOD_STMT_GET_OUTPUT, mysql_stmt_api_get_output);
+   methods.add(QDBI_METHOD_STMT_GET_OUTPUT_ROWS, mysql_stmt_api_get_output_rows);
+#endif
    
 #if defined(HAVE_MYSQL_STMT) && defined(_QORE_HAS_DBI_OPTIONS)
    methods.add(QDBI_METHOD_OPT_SET, mysql_opt_set);

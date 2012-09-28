@@ -4,7 +4,7 @@
 
   Qore Programming Language
 
-  Copyright (C) 2003 - 2010
+  Copyright (C) 2003 - 2012 David Nichols
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -36,52 +36,111 @@
 #endif
 
 #ifdef HAVE_MYSQL_STMT
-class QoreMySQLConnection;
+class QoreMysqlConnection;
+
+static inline void get_lower_case_name(QoreString* str, const QoreEncoding* enc, const char *name) {
+   str->set(name, enc);
+   str->tolwr();
+}
 
 class MyResult {
 private:
    MYSQL_FIELD *field;
    int num_fields;
-   int type;
    MYSQL_BIND *bindbuf;
    struct bindInfo {
       my_bool mnull;
       long unsigned int mlen;
    } *bi;
-   QoreMySQLConnection* conn;
+   QoreMysqlConnection* conn;
+   const QoreEncoding* enc;
 
 public:
-   DLLLOCAL inline MyResult(MYSQL_RES *res, QoreMySQLConnection* c) : bindbuf(0), bi(0), conn(c) {
-      field = mysql_fetch_fields(res);
-      num_fields = mysql_num_fields(res);
-      mysql_free_result(res);
+   DLLLOCAL MyResult(QoreMysqlConnection* c, const QoreEncoding* n_enc)
+      : field(0), num_fields(0), bindbuf(0), bi(0), conn(c), enc(n_enc) {
    }
 
-   DLLLOCAL inline ~MyResult() {
+   DLLLOCAL ~MyResult() {
+      reset();
+   }
+
+   DLLLOCAL void reset() {
       if (bindbuf) {
 	 // delete buffer
-	 for (int i = 0; i < num_fields; i++)
-	    if (bindbuf[i].buffer_type == MYSQL_TYPE_DOUBLE || bindbuf[i].buffer_type == MYSQL_TYPE_LONGLONG)
-	       free(bindbuf[i].buffer);
-	    else if (bindbuf[i].buffer_type == MYSQL_TYPE_STRING)
-	       delete [] (char *)bindbuf[i].buffer;
-	    else if (bindbuf[i].buffer_type == MYSQL_TYPE_DATETIME)
-	       delete (MYSQL_TIME *)bindbuf[i].buffer;
+	 for (int i = 0; i < num_fields; i++) {
+            switch (bindbuf[i].buffer_type) {
+               case MYSQL_TYPE_DOUBLE:
+               case MYSQL_TYPE_LONGLONG:
+               case MYSQL_TYPE_STRING:
+               case MYSQL_TYPE_BLOB:
+                  if (bindbuf[i].buffer)
+                     free(bindbuf[i].buffer);
+                  break;
+
+               case MYSQL_TYPE_DATETIME:
+                  delete (MYSQL_TIME*)bindbuf[i].buffer;
+                  break;
+
+               // to avoid warnings
+               default:
+                  break;
+            }
+         }
 	 delete [] bindbuf;
+         bindbuf = 0;
       }
-      if (bi)
+      if (bi) {
 	 delete [] bi;
+         bi = 0;
+      }
+   }
+
+   DLLLOCAL void set(MYSQL_STMT* stmt) {
+      reset();
+      MYSQL_RES* res = mysql_stmt_result_metadata(stmt);
+      if (res) {
+         field = mysql_fetch_fields(res);
+         num_fields = mysql_num_fields(res);
+         mysql_free_result(res);
+      }
+   }
+
+   DLLLOCAL operator bool() const {
+      return (bool)num_fields;
    }
 
    DLLLOCAL void bind(MYSQL_STMT *stmt);
-   DLLLOCAL AbstractQoreNode *getBoundColumnValue(const QoreEncoding *csid, int i);
+   DLLLOCAL AbstractQoreNode* getBoundColumnValue(int i, bool destructive = false);
 
-   DLLLOCAL inline char *getFieldName(int i) {
+   DLLLOCAL char *getFieldName(int i) {
       return field[i].name;
    }
 
-   DLLLOCAL inline int getNumFields() {
+   DLLLOCAL int getNumFields() {
       return num_fields;
+   }
+
+   DLLLOCAL QoreHashNode* getSingleRow(ExceptionSink* xsink) {
+      QoreHashNode* h = new QoreHashNode;
+
+      for (int i = 0; i < num_fields; i++) {
+         QoreString tstr(field[i].name, enc);
+         tstr.tolwr();
+         h->setKeyValue(&tstr, getBoundColumnValue(i), xsink);
+      }
+      return h;
+   }
+
+   // returns a hash of empty lists keyed by column name
+   DLLLOCAL QoreHashNode* setupColumns() {
+      QoreHashNode* h = new QoreHashNode;
+      QoreString tstr;
+      for (int i = 0; i < num_fields; i++) {
+	 get_lower_case_name(&tstr, enc, field[i].name);
+	 h->setKeyValue(&tstr, new QoreListNode, 0);
+      }
+
+      return h;
    }
 };
 
@@ -116,38 +175,61 @@ union my_val {
    }
 };
 
-class QoreMySQLBindNode {
-private:
+class QoreMysqlBindNode {
+protected:
+   DLLLOCAL ~QoreMysqlBindNode() {
+      assert(!data.value);
+      assert(!data.tstr);
+   }
 
 public:
    int bindtype;
    unsigned long len;
 
    struct {
-      const AbstractQoreNode *value;   // value to be bound
+      AbstractQoreNode *value;   // value to be bound
       QoreStringNode *tstr;   // temporary string to be deleted
    } data;
 
    union my_val vbuf;
-   QoreMySQLBindNode *next;
+   QoreMysqlBindNode *next;
 
    // for value nodes
-   DLLLOCAL inline QoreMySQLBindNode(const AbstractQoreNode *v) {
+   DLLLOCAL QoreMysqlBindNode(const AbstractQoreNode *v) {
       bindtype = BN_VALUE;
-      data.value = v;
-      data.tstr = NULL;
-      next = NULL;
+      data.value = v ? v->refSelf() : 0;
+      data.tstr = 0;
+      next = 0;
    }
 
-   DLLLOCAL inline ~QoreMySQLBindNode() {
-      if (data.tstr)
+   DLLLOCAL void del(ExceptionSink* xsink) {
+      reset(xsink);
+      delete this;
+   }
+
+   DLLLOCAL int reset(ExceptionSink* xsink) {
+      if (data.tstr) {
 	 data.tstr->deref();
+         data.tstr = 0;
+      }
+      if (data.value) {
+         data.value->deref(xsink);
+         data.value = 0;
+      }
+      return *xsink ? -1 : 0;
+   }
+
+   DLLLOCAL int rebind(const AbstractQoreNode* v, ExceptionSink* xsink) {
+      if (reset(xsink))
+         return -1;
+      data.value = v ? v->refSelf() : 0;
+      return 0;
    }
      
-   DLLLOCAL int bindValue(const QoreEncoding *enc, MYSQL_BIND *buf, ExceptionSink *xsink);
+   DLLLOCAL int bindValue(const QoreEncoding *enc, MYSQL_BIND *buf, ExceptionSink* xsink);
 };
 
-static MYSQL *qore_mysql_init(Datasource *ds, ExceptionSink *xsink);
+static MYSQL *qore_mysql_init(Datasource *ds, ExceptionSink* xsink);
 
 static inline bool wasInTransaction(Datasource *ds) {
 #ifdef _QORE_HAS_DATASOURCE_ACTIVETRANSACTION
@@ -169,19 +251,19 @@ static inline bool wasInTransaction(Datasource *ds) {
 #define OPT_NUM_DEFAULT OPT_NUM_STRING
 #endif
 
-class QoreMySQLConnection {
+class QoreMysqlConnection {
 public:
    MYSQL *db;
    int numeric_support;
 
-   DLLLOCAL QoreMySQLConnection(MYSQL *d) : db(d), numeric_support(OPT_NUM_DEFAULT) {
+   DLLLOCAL QoreMysqlConnection(MYSQL *d) : db(d), numeric_support(OPT_NUM_DEFAULT) {
    }
 
-   DLLLOCAL ~QoreMySQLConnection() {
+   DLLLOCAL ~QoreMysqlConnection() {
       mysql_close(db);
    }
 
-   DLLLOCAL int reconnect(Datasource *ds, MYSQL_STMT *&stmt, const QoreString *str, ExceptionSink *xsink) {	 
+   DLLLOCAL int reconnect(Datasource *ds, MYSQL_STMT *&stmt, const QoreString& str, ExceptionSink* xsink) {	 
       // throw an exception if a transaction is in progress
       if (wasInTransaction(ds))
 	 xsink->raiseException("DBI:MYSQL:CONNECTION-ERROR", "connection to MySQL database server lost while in a transaction; transaction has been lost");
@@ -206,7 +288,7 @@ public:
 	 return -1;
 	 
       // prepare the statement for execution (again)
-      if (mysql_stmt_prepare(stmt, str->getBuffer(), str->strlen()))
+      if (mysql_stmt_prepare(stmt, str.getBuffer(), str.strlen()))
 	 return -1;
 	 
       return 0;
@@ -223,7 +305,7 @@ public:
    DLLLOCAL int q_errno() {
       return mysql_errno(db);
    }
-   DLLLOCAL MYSQL_STMT *stmt_init(ExceptionSink *xsink) {
+   DLLLOCAL MYSQL_STMT *stmt_init(ExceptionSink* xsink) {
       MYSQL_STMT *stmt = mysql_stmt_init(db);
       if (!stmt)
 	 xsink->raiseException("DBI:MYSQL:ERROR", "error creating MySQL statement handle: out of memory");
@@ -262,22 +344,29 @@ public:
    }
 };
 
-class QoreMySQLBindGroup {
-private:
-   QoreMySQLBindNode *head, *tail;
+class QoreMysqlBindGroup {
+protected:
+   QoreMysqlBindNode *head, *tail;
    QoreString *str;
    MYSQL_STMT *stmt;
    bool hasOutput;
    MYSQL_BIND *bind;
    Datasource *ds;
-   QoreMySQLConnection *mydata;
+   QoreMysqlConnection* mydata;
    int len;
    cstr_vector_t phl;
-   //bool locked;
+   MyResult myres;
 
-   // returns -1 for error, 0 for OK
-   DLLLOCAL inline int parse(const QoreListNode *args, ExceptionSink *xsink);
-   DLLLOCAL inline void add(class QoreMySQLBindNode *c) {
+   // returns -1 = error, 0 = OK, 1 = server doesn't support prepared statements
+   DLLLOCAL int prepare(bool unsupported_ok, ExceptionSink* xsink);
+
+   // returns -1 = error, 0 = OK
+   DLLLOCAL int rebindArgs(const QoreListNode* args, ExceptionSink* xsink);
+   DLLLOCAL int bindArgs(ExceptionSink* xsink);
+
+   // returns -1 = error, 0 = OK
+   DLLLOCAL inline int parse(const QoreListNode *args, ExceptionSink* xsink);
+   DLLLOCAL inline void add(class QoreMysqlBindNode *c) {
       len++;
       if (!tail)
 	 head = c;
@@ -286,30 +375,92 @@ private:
       tail = c;
    }
 
-   DLLLOCAL inline class AbstractQoreNode *getOutputHash(ExceptionSink *xsink);
-   DLLLOCAL class AbstractQoreNode *execIntern(ExceptionSink *xsink);
+   DLLLOCAL int execIntern(ExceptionSink* xsink);
+   
+   DLLLOCAL int getDataRows(QoreListNode& l, ExceptionSink* xsink, int max = -1);
+   DLLLOCAL int getDataColumns(QoreHashNode& h, ExceptionSink* xsink, int max = -1);
+
+   DLLLOCAL ~QoreMysqlBindGroup() {
+      assert(!head);
+      assert(!str);
+      assert(!stmt);
+      assert(!bind);
+   }
 
 public:
-   DLLLOCAL QoreMySQLBindGroup(Datasource *ods);
-   DLLLOCAL ~QoreMySQLBindGroup();
+   DLLLOCAL QoreMysqlBindGroup(Datasource *ods) 
+   : head(0), tail(0), str(0), stmt(0), hasOutput(false), bind(0), 
+     ds(ods), mydata((QoreMysqlConnection *)ds->getPrivateData()), len(0),
+     myres(mydata, ds->getQoreEncoding()) {
+   }
+
+   DLLLOCAL void del(ExceptionSink* xsink) {
+      reset(xsink);
+      delete this;
+   }
+
+   DLLLOCAL void reset(ExceptionSink* xsink);
 
    // returns 0=OK, -1=error and exception raised, 1=statement cannot be prepared
-   DLLLOCAL int prepare_and_bind(const QoreString *ostr, const QoreListNode *args, ExceptionSink *xsink);
+   DLLLOCAL int prepareAndBind(const QoreString *ostr, const QoreListNode *args, ExceptionSink* xsink);
 
-   DLLLOCAL inline void add(const AbstractQoreNode *v) {
-      add(new QoreMySQLBindNode(v));
-      printd(5, "QoreMySQLBindGroup::add() value=%08p\n", v);
+   DLLLOCAL void add(const AbstractQoreNode *v) {
+      add(new QoreMysqlBindNode(v));
+      printd(5, "QoreMysqlBindGroup::add() value=%08p\n", v);
    }
 
-   DLLLOCAL inline void add(char *name) {
+   DLLLOCAL void add(char *name) {
       phl.push_back(name);
-      printd(5, "QoreMySQLBindGroup::add() placeholder '%s' %d %s\n", name);
+      printd(5, "QoreMysqlBindGroup::add() placeholder '%s' %d %s\n", name);
       hasOutput = true;
    }
-   DLLLOCAL class AbstractQoreNode *exec(ExceptionSink *xsink);
-   DLLLOCAL class AbstractQoreNode *select(ExceptionSink *xsink);
-   DLLLOCAL class AbstractQoreNode *selectRows(ExceptionSink *xsink);
+
+   DLLLOCAL int affectedRows() const {
+      assert(stmt);
+      return mysql_stmt_affected_rows(stmt);
+   }
+
+   // also can be used like "select"
+   DLLLOCAL AbstractQoreNode* exec(ExceptionSink* xsink);
+   DLLLOCAL AbstractQoreNode* selectRows(ExceptionSink* xsink);
+   DLLLOCAL QoreHashNode* selectRow(ExceptionSink* xsink);
+
+   DLLLOCAL QoreHashNode* getOutputHash(ExceptionSink* xsink);
 };
+
+class QoreMysqlBindGroupHelper : public QoreMysqlBindGroup {
+protected:
+   ExceptionSink* xsink;
+
+public:
+   DLLLOCAL QoreMysqlBindGroupHelper(Datasource* ds, ExceptionSink* xs) : QoreMysqlBindGroup(ds), xsink(xs) {
+   }
+
+   DLLLOCAL ~QoreMysqlBindGroupHelper() {
+      reset(xsink);
+   }
+};
+
+#ifdef _QORE_HAS_PREPARED_STATMENT_API
+class QoreMysqlPreparedStatement : public QoreMysqlBindGroup {
+public:
+   DLLLOCAL QoreMysqlPreparedStatement(Datasource* ds) : QoreMysqlBindGroup(ds) {
+   }
+
+   DLLLOCAL ~QoreMysqlPreparedStatement() {
+   }
+
+   // returns 0 for OK, -1 for error
+   DLLLOCAL int prepare(const QoreString& sql, const QoreListNode* args, bool parse, ExceptionSink* xsink);
+   DLLLOCAL int bind(const QoreListNode& l, ExceptionSink* xsink);
+   DLLLOCAL int define(ExceptionSink* xsink);
+   DLLLOCAL int exec(ExceptionSink* xsink);
+   DLLLOCAL QoreHashNode* fetchRow(ExceptionSink* xsink);
+   DLLLOCAL QoreListNode* fetchRows(int rows, ExceptionSink* xsink);
+   DLLLOCAL QoreHashNode* fetchColumns(int rows, ExceptionSink* xsink);
+   DLLLOCAL bool next();
+};
+#endif // _QORE_HAS_PREPARED_STATMENT_API
 
 #endif // HAVE_MYSQL_STMT
 
