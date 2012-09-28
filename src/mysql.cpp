@@ -508,10 +508,6 @@ int QoreMysqlBindGroup::prepareAndBind(const QoreString* ostr, const QoreListNod
    if (parse(args, xsink))
       return -1;
 
-   stmt = mydata->stmt_init(xsink);
-   if (!stmt)
-      return -1;
-
    //printd(5, "mysql prepare: (%d) %s\n", str->strlen(), str->getBuffer());
 
    // prepare the statement for execution
