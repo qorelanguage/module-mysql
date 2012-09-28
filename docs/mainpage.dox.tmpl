@@ -1,0 +1,158 @@
+/** @mainpage %Qore mysql Module
+
+    @tableofcontents
+
+    Contents of this documentation:
+    - @ref intro
+    - @ref options
+    - @ref trans
+    - @ref bind
+    - @ref storedprocs
+    - @ref releasenotes
+    
+    @section intro Introduction
+
+    The mysql module provides a <a href="www.mysql.com">MySQL</a> driver to Qore's DBI system, allowing Qore programs to access MySQL databases through the Datasource, DatasourcePool, and SQLStatement classes.
+
+    This module is released under the <a href="http://www.gnu.org/licenses/old-licenses/gpl-2.0.html">GPL 2</a> and is tagged as such in the module's header (meaning it can only be loaded if the Qore library was initialized from a GPL program as well).
+
+    Example of creating a MySQL Datasource:
+    @code
+my Datasource $db(SQL::DSMySQL, $user, $pass, $db, $charset, $hostname, $port);
+    @endcode
+
+    This driver supports the following DBI capabilities when compiled against MySQL 5 or better:
+    - \c DBI_CAP_TRANSACTION_MANAGEMENT
+    - \c DBI_CAP_CHARSET_SUPPORT
+    - \c DBI_CAP_LOB_SUPPORT
+    - \c DBI_CAP_STORED_PROCEDURES
+    - \c DBI_CAP_BIND_BY_VALUE
+    - \c DBI_CAP_HAS_EXECRAW
+    - \c DBI_CAP_HAS_STATEMENT
+    - \c DBI_CAP_HAS_SELECT_ROW
+    - \c DBI_CAP_HAS_NUMBER_SUPPORT
+    - \c DBI_CAP_HAS_OPTION_SUPPORT
+
+    The driver uses MySQL's prepared statement interface when it is available (must be compiled with MySQL 4 or better).
+
+    If a connection times out while not in a transaction, the connection will be automatically reconnected.
+
+    As with all Qore DBI drivers, column names are manually converted to lower case if necessary before being returned to the user.
+
+    The <tt>Datasource::getServerVersion()</tt> and <tt>Datasource::getClientVersion()</tt> methods are implemented for this driver and return an integer giving the major, minor, and sub version numbers in a single integer according to the following formula: 
+
+    @verbatim
+major_version * 10000 + minor_version * 100 + sub_version
+    @endverbatim
+
+    (For example: \c 50027 = <tt>5.0.27</tt>).
+
+    Like all Qore components, the MySQL DBI driver is thread-safe.
+
+    @section options Driver Options
+
+    When compiled again Qore 0.8.6+ the mysql driver support the following DBI options:
+    - \c "optimal-numbers": return numeric types as an integer if possible, if not as an arbitrary-precision number
+    - \c "string-numbers": return numeric types as strings (for backwards-compatibility)
+    - \c "numeric-numbers": return numeric types as arbitrary-precision number values
+
+    The default if no other option is explicitly set is \c "optimal-numbers".  Note that this represents a change from previous numbers where numeric/decimal values were returned as strings in order to avoid the loss of information.  To set the old behavior, set the \c "string-numbers" option when creating the \c Datasource or \c DatasourcePool object.
+
+    Options can be set in the \c Datasource or \c DatasourcePool constructors as in the following examples:
+    @code
+    my Dataource $ds("mysql:user/pass@db%hostname{numeric-numbers}");
+    my DataourcePool $dsp("mysql:user/pass@db%host.internal:3306{optimal-numbers}");
+    @endcode
+
+    @section trans Transaction Management
+
+    This driver sets new connections to use transaction isolation level <tt>read committed</tt>> explicitly for every new connection to conform to Qore's default transaction management style.
+
+    The transaction level can be changed manually, however, using the <tt>Datasource::exec()</tt> method.
+
+    Aditionally the <tt>CLIENT_FOUND_ROWS</tt> option is set for each connection, so <tt>Datasource::exec()</tt> will return the number of rows affected by insert/update queries, etc in a manner consistent with other Qore DBI drivers (if this option is not set and a single row is updated with the same values, 0 would be returned instead of 1 which would not confirm to the behavior of other Qore DBI drivers).
+
+    @section bind Binding and Types
+
+    See @ref mysql_to_qore for information on how MySQL types are converted to Qore data types, and @ref binding_by_value for information on how Qore data types are converted to MySQL types when binding by value.
+
+    Note that is is not necessary to give buffer types when binding placeholder values; the \c mysql driver will determine the needed type in advance and create the placeholder buffer automatically.
+
+    Qore placeholder buffer specifications can still be used to retrieve output variables as follows however:
+
+    @code
+my date $now = $db.selectRow("select current_timestamp into :time").time;
+    @endcode
+
+    @subsection mysql_to_qore MySQL to Qore Type Mappings
+
+    |!MySQL Type|!Qore Type|!Notes
+    |<tt>TINYINT</tt>|<tt>Type::Int</tt>|direct conversion (note that <tt>BOOL</tt> and <tt>BOOLEAN</tt> are synonyms for this type in ~MySQL)
+    |<tt>SMALLINT</tt>|<tt>Type::Int</tt>|direct conversion
+    |<tt>MEDIUMINT</tt>|<tt>Type::Int</tt>|direct conversion
+    |<tt>INT</tt>|<tt>Type::Int</tt>|direct conversion
+    |<tt>BIGINT</tt>|<tt>Type::Int</tt>|direct conversion
+    |<tt>YEAR</tt>|<tt>Type::Int</tt>|direct conversion
+    |<tt>DECIMAL</tt>|<tt>Type::String</tt>|value is converted to a string to avoid a loss of precision
+    |<tt>FLOAT</tt>|<tt>Type::Float</tt>|direct conversion
+    |<tt>DOUBLE</tt>|<tt>Type::Float</tt>|direct conversion
+    |<tt>DATETIME</tt>|<tt>Type::Date</tt>|direct conversion
+    |<tt>DATE</tt>|<tt>Type::Date</tt>|direct conversion
+    |<tt>TIME</tt>|<tt>Type::Date</tt>|direct conversion; the date portion will be set to January 1, 1970 (start of Qore's 64-bit epoch)
+    |<tt>TIMESTAMP</tt>|<tt>Type::Date</tt>|direct conversion
+    |<tt>BLOB</tt>|<tt>Type::Binary</tt>|direct conversion
+    |<tt>TINYBLOB</tt>|<tt>Type::Binary</tt>|direct conversion
+    |<tt>MEDIUMBLOB</tt>|<tt>Type::Binary</tt>|direct conversion
+    |<tt>BINARY</tt>|<tt>Type::Binary</tt>|direct conversion
+    |<tt>VARBINARY</tt>|<tt>Type::Binary</tt>|direct conversion
+
+    @subsection binding_by_value Binding By Value
+
+    |QoreType|!MySQL Type|!Description
+    |<tt>Type::String</tt>|<tt>MYSQL_TYPE_STRING</tt>|string data is mapped directly after any character encoding conversions (if necessary)
+    |<tt>Type::Date</tt>|<tt>MYSQL_TYPE_DATETIME</tt>|direct mapping of data
+    |<tt>Type::Binary</tt>|<tt>MYSQL_TYPE_BLOB</tt>|direct mapping of data
+    |<tt>Type::Boolean</tt>|<tt>MYSQL_TYPE_LONG</tt>|True=1, False=0
+    |<tt>Type::Int</tt>|<tt>MYSQL_TYPE_LONGLONG</tt>|direct mapping of data
+    |<tt>Type::Float</tt>|<tt>MYSQL_TYPE_DOUBLE</tt>|direct mapping of data
+
+    @section storedprocs Stored Procedures
+
+    With appropriate versions of MySQL (version 5+), stored procedure execution is supported; the following is an example of a stored procedure call:
+
+    Example MySQL function:
+    @code
+delimiter //
+create procedure get_family (in id int, out fname varchar(32))
+begin
+   select name into fname from family where family_id = id;
+end;
+//
+    @endcode
+
+    Qore code to call this function:
+    @code
+my hash $result = $db.exec("call get_family(%v, :name)", 1);
+printf("%N\n", $result);
+    @endcode
+
+    Resulting in:
+    @code
+hash: (1 member)
+  name : "Smith"
+    @endcode
+
+    @section releasenotes Release Notes
+
+    @subsection mysql20 mysql Driver Version 2.0
+
+    <b>New Features and Bug Fixes</b>
+    - implemented support for the selectRow DBI method
+    - implemented support for the prepared statement API; the driver uses MySQL's prepared statement API internall to bind to Qore's DBI prepared statement API
+    - implemented support for binding and retrieving "number" types
+    - implemented support for the following DBI options:
+      - \c "optimal-numbers": return numeric types as an integer if possible, if not as an arbitrary-precision number
+      - \c "string-numbers": return numeric types as strings (for backwards-compatibility)
+      - \c "numeric-numbers": return numeric types as arbitrary-precision number values
+
+*/
