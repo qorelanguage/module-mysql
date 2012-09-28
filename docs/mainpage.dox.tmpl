@@ -93,7 +93,7 @@ my date $now = $db.selectRow("select current_timestamp into :time").time;
     |<tt>INT</tt>|<tt>Type::Int</tt>|direct conversion
     |<tt>BIGINT</tt>|<tt>Type::Int</tt>|direct conversion
     |<tt>YEAR</tt>|<tt>Type::Int</tt>|direct conversion
-    |<tt>DECIMAL</tt>|<tt>Type::String</tt>|value is converted to a string to avoid a loss of precision
+    |<tt>DECIMAL</tt>|<tt>Type::Int</tt>, <tt>Type::String</tt>, or <tt>Type::Number</tt>|depends on @ref options "driver options"
     |<tt>FLOAT</tt>|<tt>Type::Float</tt>|direct conversion
     |<tt>DOUBLE</tt>|<tt>Type::Float</tt>|direct conversion
     |<tt>DATETIME</tt>|<tt>Type::Date</tt>|direct conversion
@@ -115,6 +115,7 @@ my date $now = $db.selectRow("select current_timestamp into :time").time;
     |<tt>Type::Boolean</tt>|<tt>MYSQL_TYPE_LONG</tt>|True=1, False=0
     |<tt>Type::Int</tt>|<tt>MYSQL_TYPE_LONGLONG</tt>|direct mapping of data
     |<tt>Type::Float</tt>|<tt>MYSQL_TYPE_DOUBLE</tt>|direct mapping of data
+    |<tt>Type::Number</tt>|<tt>MYSQL_TYPE_STRING</tt>|direct conversion to a string (this is the only input type MySQL provides for numeric/decimal values)
 
     @section storedprocs Stored Procedures
 
