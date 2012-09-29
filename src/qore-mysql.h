@@ -152,27 +152,7 @@ union my_val {
    double f8;
    void *ptr;
 
-   DLLLOCAL void assign(const DateTime &d) {
-#ifdef _QORE_HAS_TIME_ZONES
-      qore_tm tm;
-      d.getInfo(tm);
-
-      time.year = tm.year;
-      time.month = tm.month;
-      time.day = tm.day;
-      time.hour = tm.hour;
-      time.minute = tm.minute;
-      time.second = tm.second;
-#else
-      time.year = d.getYear();
-      time.month = d.getMonth();
-      time.day = d.getDay();
-      time.hour = d.getHour();
-      time.minute = d.getMinute();
-      time.second = d.getSecond();
-#endif
-      time.neg = false;
-   }
+   DLLLOCAL void assign(const QoreMysqlConnection& conn, const DateTime &d);
 };
 
 class QoreMysqlBindNode {
@@ -226,7 +206,7 @@ public:
       return 0;
    }
      
-   DLLLOCAL int bindValue(const QoreEncoding *enc, MYSQL_BIND *buf, ExceptionSink* xsink);
+   DLLLOCAL int bindValue(const QoreMysqlConnection& conn, MYSQL_BIND *buf, ExceptionSink* xsink);
 };
 
 static MYSQL *qore_mysql_init(Datasource *ds, ExceptionSink* xsink);
@@ -253,10 +233,19 @@ static inline bool wasInTransaction(Datasource *ds) {
 
 class QoreMysqlConnection {
 public:
-   MYSQL *db;
+   MYSQL* db;
+   Datasource& ds;
+#ifdef _QORE_HAS_FIND_CREATE_TIMEZONE
+   const AbstractQoreZoneInfo* server_tz;
+#endif
    int numeric_support;
 
-   DLLLOCAL QoreMysqlConnection(MYSQL *d) : db(d), numeric_support(OPT_NUM_DEFAULT) {
+   DLLLOCAL QoreMysqlConnection(MYSQL* d, Datasource& n_ds) 
+      : db(d), ds(n_ds), 
+#ifdef _QORE_HAS_FIND_CREATE_TIMEZONE
+        server_tz(currentTZ()),
+#endif
+        numeric_support(OPT_NUM_DEFAULT) {
    }
 
    DLLLOCAL ~QoreMysqlConnection() {
@@ -293,39 +282,59 @@ public:
 	 
       return 0;
    }
+
    DLLLOCAL int commit() {
       return mysql_commit(db);
    }
+
    DLLLOCAL int rollback() {
       return mysql_rollback(db);
    }
+
    DLLLOCAL const char *error() {
       return mysql_error(db);
    }
+
    DLLLOCAL int q_errno() {
       return mysql_errno(db);
    }
+
    DLLLOCAL MYSQL_STMT *stmt_init(ExceptionSink* xsink) {
       MYSQL_STMT *stmt = mysql_stmt_init(db);
       if (!stmt)
 	 xsink->raiseException("DBI:MYSQL:ERROR", "error creating MySQL statement handle: out of memory");
       return stmt;
    }
+
    DLLLOCAL unsigned long getServerVersion() {
       return mysql_get_server_version(db);
    }
 
-   DLLLOCAL void setOption(const char* opt, const AbstractQoreNode* val) {
+   DLLLOCAL int setOption(const char* opt, const AbstractQoreNode* val, ExceptionSink* xsink) {
       if (!strcasecmp(opt, DBI_OPT_NUMBER_OPT)) {
          numeric_support = OPT_NUM_OPTIMAL;
-         return;
+         return 0;
       }
       if (!strcasecmp(opt, DBI_OPT_NUMBER_STRING)) {
          numeric_support = OPT_NUM_STRING;
-         return;
+         return 0;
       }
-      assert(!strcasecmp(opt, DBI_OPT_NUMBER_NUMERIC));
-      numeric_support = OPT_NUM_NUMERIC;
+      if (!strcasecmp(opt, DBI_OPT_NUMBER_NUMERIC)) {
+         numeric_support = OPT_NUM_NUMERIC;
+         return 0;
+      }
+#ifdef _QORE_HAS_FIND_CREATE_TIMEZONE
+      assert(!strcasecmp(opt, DBI_OPT_TIMEZONE));
+      assert(get_node_type(val) == NT_STRING);
+      const QoreStringNode* str = reinterpret_cast<const QoreStringNode*>(val);
+      const AbstractQoreZoneInfo* tz = find_create_timezone(str->getBuffer(), xsink);
+      if (*xsink)
+         return -1;
+      server_tz = tz;
+#else
+      assert(false);
+#endif
+      return 0;
    }
 
    DLLLOCAL AbstractQoreNode* getOption(const char* opt) {
@@ -335,13 +344,31 @@ public:
       if (!strcasecmp(opt, DBI_OPT_NUMBER_STRING))
          return get_bool_node(numeric_support == OPT_NUM_STRING);
 
-      assert(!strcasecmp(opt, DBI_OPT_NUMBER_NUMERIC));
-      return get_bool_node(numeric_support == OPT_NUM_NUMERIC);
+      if (!strcasecmp(opt, DBI_OPT_NUMBER_NUMERIC))
+         return get_bool_node(numeric_support == OPT_NUM_NUMERIC);
+
+#ifdef _QORE_HAS_FIND_CREATE_TIMEZONE
+      assert(!strcasecmp(opt, DBI_OPT_TIMEZONE));
+      return new QoreStringNode(tz_get_region_name(server_tz));
+#else
+      assert(false);
+#endif
+      return 0;
    }
 
    DLLLOCAL int getNumeric() const { 
       return numeric_support; 
    }
+
+#ifdef _QORE_HAS_TIME_ZONES
+   DLLLOCAL const AbstractQoreZoneInfo* getTZ() const {
+#ifdef _QORE_HAS_FIND_CREATE_TIMEZONE
+      return server_tz;
+#else
+      return currentTZ();
+#endif
+   }
+#endif
 };
 
 class QoreMysqlBindGroup {

@@ -10,6 +10,9 @@ with Qore 0.8.6+:
   + "optimal-numbers": return numeric types as an integer if possible, if not as an arbitrary-precision number
   + "string-numbers": return numeric types as strings (for backwards-compatibility)
   + "numeric-numbers": return numeric types as arbitrary-precision number values
+ + "timezone": accepts a string argument that can be either a region name (ex: "Europe/Prague") or a UTC offset (ex: "+01:00") to set the server's time zone ru\
+les; this is useful if connecting to a database server in a different time zone.  If this option is not set then the server's time zone is assumed to be the same as the client's time zone
++ the default for the number options is now "optimal-numbers", meaning that NUMERIC or DECIMAL values are retrieved as integers if possible, otherwise an arbitrary-precision number type is returned.
 
 
 -------------

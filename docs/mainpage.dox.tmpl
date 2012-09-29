@@ -32,6 +32,7 @@ my Datasource $db(SQL::DSMySQL, $user, $pass, $db, $charset, $hostname, $port);
     - \c DBI_CAP_HAS_SELECT_ROW
     - \c DBI_CAP_HAS_NUMBER_SUPPORT
     - \c DBI_CAP_HAS_OPTION_SUPPORT
+    - \c DBI_CAP_SERVER_TIME_ZONE
 
     The driver uses MySQL's prepared statement interface when it is available (must be compiled with MySQL 4 or better).
 
@@ -55,14 +56,21 @@ major_version * 10000 + minor_version * 100 + sub_version
     - \c "optimal-numbers": return numeric types as an integer if possible, if not as an arbitrary-precision number
     - \c "string-numbers": return numeric types as strings (for backwards-compatibility)
     - \c "numeric-numbers": return numeric types as arbitrary-precision number values
-
-    The default if no other option is explicitly set is \c "optimal-numbers".  Note that this represents a change from previous numbers where numeric/decimal values were returned as strings in order to avoid the loss of information.  To set the old behavior, set the \c "string-numbers" option when creating the \c Datasource or \c DatasourcePool object.
+    - \c "timezone": accepts a string argument that can be either a region name (ex: \c "Europe/Prague") or a UTC offset (ex: \c "+01:00") to set the server's time zone rules; this is useful if connecting to a database server in a different time zone.  If this option is not set then the server's time zone is assumed to be the same as the client's time zone; see @ref timezone.
 
     Options can be set in the \c Datasource or \c DatasourcePool constructors as in the following examples:
     @code
-    my Dataource $ds("mysql:user/pass@db%hostname{numeric-numbers}");
+    my Dataource $ds("mysql:user/pass@db{numeric-numbers,timezone=Europe/Vienna}");
     my DataourcePool $dsp("mysql:user/pass@db%host.internal:3306{optimal-numbers}");
     @endcode
+
+    Options are stored separately for each connection.
+
+    @subsection number_options Number Options
+
+    The number options (\c "optimal-numbers", \c "string-numbers", and \c "numeric-numbers") are all mutually-exclusive; setting one automatically disables the others.   These options also ignore their arguments; the last one set takes effect (also note that setting it with any value sets the option, even @ref False).
+
+    The default if no other option is explicitly set is \c "optimal-numbers".  Note that this represents a change from previous versions where \c NUMERIC or \c DECIMAL values were returned as strings in order to avoid the loss of information.  To set the old behavior, set the \c "string-numbers" option when creating the \c Datasource or \c DatasourcePool object.
 
     @section trans Transaction Management
 
@@ -83,6 +91,16 @@ major_version * 10000 + minor_version * 100 + sub_version
     @code
 my date $now = $db.selectRow("select current_timestamp into :time").time;
     @endcode
+
+    @subsection timezone Time Zone Support
+
+    The driver now sets the server's time zone rules when the connection is established; this is taken from the current time zone settings of the calling Program object and can also be overridden/changed by setting the \c "timezone" driver option (see @ref options).
+
+    All date/time values bound by value are converted to the server's time zone before binding to ensure that date/time values are stored correctly in the server.
+
+    When selecting date/time values, the values returned are tagged with the server's time zone.
+
+    Note that the above rules are applied when the current Program's time zone settings are different than the connection's time zone settings at the time when the write operation (bind) read operation (select) is performed.  This is meant to provide consistent support to connecting to a database server in a different time zone.
 
     @subsection mysql_to_qore MySQL to Qore Type Mappings
 
@@ -155,5 +173,7 @@ hash: (1 member)
       - \c "optimal-numbers": return numeric types as an integer if possible, if not as an arbitrary-precision number
       - \c "string-numbers": return numeric types as strings (for backwards-compatibility)
       - \c "numeric-numbers": return numeric types as arbitrary-precision number values
-
+      - \c "timezone": accepts a string argument that can be either a region name (ex: \c "Europe/Prague") or a UTC offset (ex: \c "+01:00") to set the server's time zone rules; this is useful if connecting to a database server in a different time zone.  If this option is not set then the server's time zone is assumed to be the same as the client's time zone; see @ref timezone.
+    - the default for the number options (see @ref number_options) is now "optimal-numbers" - meaning that \c NUMERIC or \c DECIMAL values are retrieved as <tt>int</tt> if possible, otherwise a <tt>number</tt> type is returned.\n
+      For backwards-compatibility, set the \c "string-numbers" option to return \c NUMERIC or \c DECIMAL values as strings.
 */
