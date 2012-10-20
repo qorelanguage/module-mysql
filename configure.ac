@@ -353,7 +353,7 @@ check_mysql() {
     elif test -f "$lib/mysql/libmysqlclient_r.a"; then
        with_mysql_libs=$lib/mysql
        mysql_static=1
-    elif test "$windows" = yes -a "$lib/lib/mysqlclient.lib"; then
+    elif test "$windows" = yes -a -f "$lib/libmysql.dll"; then
        with_mysql_libs=$lib
        mysql_winlib=1
     else
@@ -423,7 +423,7 @@ if test "${with_mysql}" = yes; then
      if test -n "$mysql_static"; then
           MYSQL_LIBS="$with_mysql_libs/libmysqlclient_r.a"
      elif test -n "$mysql_winlib"; then
-          MYSQL_LIBS="$with_mysql_libs/lib/mysqlclient.lib"
+          MYSQL_LIBS="-L$with_mysql_libs -lmysql"
      else
 	if test -n "$mysql_app_libs"; then
 	   MYSQL_LIBS="-L$with_mysql_libs -lmysqlclient_r"
