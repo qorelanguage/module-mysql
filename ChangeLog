@@ -1,3 +1,97 @@
+2012-10-20 15:58  david_nichols
+
+	* configure.ac: windows build fixes
+
+2012-09-29 07:14  david_nichols
+
+	* RELEASE-NOTES, docs/mainpage.dox.tmpl, src/mysql.cpp,
+	  src/qore-mysql.h: added support for DBI_CAP_SERVER_TIME_ZONE and
+	  the "timezone" option; return all date/time values in the
+	  server's time zone, bind all date/times in the server's time zone
+
+2012-09-28 16:28  david_nichols
+
+	* src/mysql.cpp: fixed a memory error related the new prepared
+	  statement support
+
+2012-09-28 13:24  david_nichols
+
+	* docs/mainpage.dox.tmpl: updated docs
+
+2012-09-28 13:20  david_nichols
+
+	* qore-mysql-module.spec: updated spec file for doc package and new
+	  doxygen-based html docs
+
+2012-09-28 13:17  david_nichols
+
+	* Makefile.am, docs/doxyfile.tmpl, docs/footer_template.html,
+	  docs/mainpage.dox.tmpl, docs/mysql-module-doc.html, docs/old,
+	  docs/old/mysql-module-doc.html: created doxygen docs
+
+2012-09-28 11:24  david_nichols
+
+	* test/sql-stmt.q: added prepared statement test script
+
+2012-09-28 11:16  david_nichols
+
+	* RELEASE-NOTES, src/mysql.cpp, src/qore-mysql.h: implemented
+	  support for the selectRow DBI method
+	  implemented supoprt for the prepared statement API
+	  fixed memory errors with selecting binary data types
+
+2012-09-26 15:37  david_nichols
+
+	* RELEASE-NOTES, configure.ac, qore-mysql-module.spec,
+	  src/Makefile.am, src/mysql.cc, src/mysql.cpp, src/qore-mysql.h: *
+	  updated module version to 2.0
+	  * added numeric and dbi option support when compiled with qore
+	  0.8.6+
+
+2012-06-25 08:51  david_nichols
+
+	* configure.ac: updated configure.ac logic to deal with /lib ->
+	  /usr/lib and /lib64 -> /usr/lib64 as with Fedora 17 - the
+	  previous logic was too clever for its own good
+
+2012-05-22 16:04  david_nichols
+
+	* configure.ac: an initial attempt to get the mysql module to build
+	  for windows with mxe (mingw cross-compiler)
+
+2012-01-16 13:07  david_nichols
+
+	* configure.ac: updated configure scripts to only set LIBSUFFIX=64
+	  on 64-bit platfiorms if /usr/lib64 exists
+
+2011-09-12 16:26  david_nichols
+
+	* configure.ac: added -mt to compile and link lines when building
+	  on solaris with CC
+
+2010-11-09 10:06  david_nichols
+
+	* src/qore-mysql.h: fixed reconnect logic
+
+2010-11-08 16:47  david_nichols
+
+	* src/qore-mysql.h: fixed mysql and sybase auto-reconnect logic to
+	  use the new Datasource::activeTransaction() API method
+
+2010-06-21 09:12  david_nichols
+
+	* qore-mysql-module.spec: updated spec files to generically
+	  determine *suse versions for distribution tagging in rpm file
+	  names
+
+2010-06-20 06:00  david_nichols
+
+	* ChangeLog: updated changelog with fixed svn2cl
+
+2010-06-20 05:49  david_nichols
+
+	* README-BINARIES: added readme
+
 2010-06-19 18:56  david_nichols
 
 	* qore-mysql-module.spec: minor rpm updates
