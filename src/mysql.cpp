@@ -390,10 +390,11 @@ AbstractQoreNode* MyResult::getBoundColumnValue(int i, bool destructive) {
 	       bool sign = p[0] == '-';
 	       if (sign)
 		  --len;
-	       if ((len < 19
-		    || (len == 19 && 
-			((!sign && strcmp(p, "9223372036854775807") <= 0)
-			 ||(sign && strcmp(p, "-9223372036854775808") >= 0)))))
+	       if (!strchr(p, '.')
+		   && (len < 19
+		       || (len == 19 && 
+			   ((!sign && strcmp(p, "9223372036854775807") <= 0)
+			    ||(sign && strcmp(p, "-9223372036854775808") >= 0)))))
 		  return new QoreBigIntNode(strtoll(p, 0, 10));
 #ifdef _QORE_HAS_NUMBER_TYPE
 	       return new QoreNumberNode(p);
