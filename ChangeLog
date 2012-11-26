@@ -1,3 +1,12 @@
+2012-10-28 18:38  david_nichols
+
+	* ChangeLog: updated changelog
+
+2012-10-28 18:38  david_nichols
+
+	* README, RELEASE-NOTES, qore-mysql-module.spec: doc/spec updates
+	  for 2.0 release
+
 2012-10-20 15:58  david_nichols
 
 	* configure.ac: windows build fixes

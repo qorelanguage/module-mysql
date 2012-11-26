@@ -10,14 +10,14 @@ The driver supports the following features (depending on the MySQL client librar
 * stored procedure execution with binding and retrieving values (5 and newer)
 * transaction management is supported (4.1 and newer)
 * transparent character encoding conversion is supported if necessary
-*) the "optimal-numbers" option is set by default as of module version 2.2
-*) supports a server timezone setting for correctly handling date/time value
-   when communicating with a DB server in another time zone
-*) the prepared statement API is support (SQLStatement class)
+* the "optimal-numbers" option is set by default as of module version 2.2
+* supports a server timezone setting for correctly handling date/time value
+  when communicating with a DB server in another time zone
+* the prepared statement API is support (SQLStatement class)
 
 The driver's name is "mysql" and the Datasource type constant is SQL::DSMySQL
-ex: $db = new Datasource(DSMySQL);
-ex: $db = new Datasource("mysql");
+ex: my Datasource $db(DSMySQL);
+ex: my Datasource $db("mysql:user/pass@db%hostname:3306");
 
 The mysql module is stable and has been extensively tested.
 
