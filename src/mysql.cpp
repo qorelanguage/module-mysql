@@ -10,7 +10,7 @@
   * transaction management added
   * character set support added
 
-  Copyright 2003 - 2012 David Nichols
+  Copyright 2003 - 2013 David Nichols
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -801,7 +801,7 @@ QoreHashNode* QoreMysqlBindGroup::selectRow(ExceptionSink* xsink) {
 
 	 // see if there is a second row
 	 if (!mysql_stmt_fetch(stmt)) {
-	    xsink->raiseException("MYSQL-SELECT-ROW-ERROR", "SQL passed to selectRow() returned more than 1 row (%d rows)", (int)rowcnt);
+	    xsink->raiseException("MYSQL-SELECT-ROW-ERROR", "SQL passed to selectRow() returned more than 1 row");
 	    return 0;
 	 }
 	 
