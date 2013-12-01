@@ -1,4 +1,11 @@
 -------------
+Version 2.0.2
+-------------
+
+* updated configure to find and compile with MariaDB and Percona includes & libs
+
+
+-------------
 Version 2.0.1
 -------------
 

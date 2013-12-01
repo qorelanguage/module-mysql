@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 
 # AC_PREREQ(2.59)
-AC_INIT([qore-mysql-module], [2.0.1],
+AC_INIT([qore-mysql-module], [2.0.2],
         [David Nichols <david@qore.org>],
         [qore-mysql-module])
 AM_INIT_AUTOMAKE([no-dist-gzip dist-bzip2 tar-ustar])
@@ -331,10 +331,18 @@ check_mysql() {
        with_mysql_includes=$inc
     elif test -f "$inc/mysql/mysql.h"; then
        with_mysql_includes=$inc/mysql
+    elif test -f "$inc/mariadb/mysql/mysql.h"; then
+       with_mysql_includes=$inc/mariadb/mysql
+    elif test -f "$inc/percona/mysql/mysql.h"; then
+       with_mysql_includes=$inc/percona/mysql
     else
        mid=`ls -rdt $a/include/mysql* 2>/dev/null | tail -1`
        if test -n "$mid" -a -f "$mid/mysql/mysql.h"; then
 	  with_mysql_includes="$mid/mysql"
+       elif test -n "$mid" -a -f "$mid/mariadb/mysql/mysql.h"; then
+	  with_mysql_includes="$mid/mariadb/mysql"
+       elif test -n "$mid" -a -f "$mid/percona/mysql/mysql.h"; then
+	  with_mysql_includes="$mid/percona/mysql"
        fi
     fi
 
@@ -347,6 +355,10 @@ check_mysql() {
        with_mysql_libs=$lib
     elif test -f "$lib/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib/mysql
+    elif test -f "$lib/mariadb/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+       with_mysql_libs=$lib/mariadb/mysql
+    elif test -f "$lib/percona/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+       with_mysql_libs=$lib/percona/mysql
     elif test -f "$lib/libmysqlclient_r.a"; then
        with_mysql_libs=$lib
        mysql_static=1
@@ -361,6 +373,10 @@ check_mysql() {
        if test -n "$mld"; then
           if test -f "$mld/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
 	     with_mysql_libs="$mld/mysql"
+          elif test -f "$mld/mariadb/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+	     with_mysql_libs="$mld/mariadb/mysql"
+          elif test -f "$mld/percona/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+	     with_mysql_libs="$mld/percona/mysql"
 	  elif test -f "$mld/mysql/libmysqlclient_r.a"; then
 	     with_mysql_libs="$mld/mysql"
 	     mysql_static=1
