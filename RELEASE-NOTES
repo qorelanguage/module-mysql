@@ -2,6 +2,7 @@
 Version 2.0.2
 -------------
 
+* fixed formatting bugs in invalid value specification error messages
 * updated configure to find and compile with MariaDB and Percona includes & libs
 
 
