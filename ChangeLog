@@ -1,3 +1,19 @@
+2012-11-26 07:13  david_nichols
+
+	* ChangeLog, README: updates
+
+2012-11-18 16:39  david_nichols
+
+	* docs/mainpage.dox.tmpl: updated docs for new version
+
+2012-11-18 16:34  david_nichols
+
+	* RELEASE-NOTES, configure.ac, qore-mysql-module.spec,
+	  src/mysql.cpp: updated module version to 2.0.1 - fixed a bug in
+	  returning numeric values where numbers with a decimal component
+	  were being returned as integers when the default option
+	  "optimal-numbers" was enabled
+
 2012-10-28 18:38  david_nichols
 
 	* ChangeLog: updated changelog
