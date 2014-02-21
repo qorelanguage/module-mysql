@@ -116,6 +116,14 @@ public:
       return field[i].name;
    }
 
+   DLLLOCAL unsigned long getFieldMaxLength(int i) {
+      return field[i].length;
+   }
+
+   DLLLOCAL enum_field_types getFieldType(int i) {
+      return field[i].type;
+   }
+
    DLLLOCAL int getNumFields() {
       return num_fields;
    }
@@ -485,6 +493,7 @@ public:
    DLLLOCAL QoreHashNode* fetchRow(ExceptionSink* xsink);
    DLLLOCAL QoreListNode* fetchRows(int rows, ExceptionSink* xsink);
    DLLLOCAL QoreHashNode* fetchColumns(int rows, ExceptionSink* xsink);
+   DLLLOCAL QoreHashNode* describe(ExceptionSink *xsink);
    DLLLOCAL bool next();
 };
 #endif // _QORE_HAS_PREPARED_STATMENT_API
