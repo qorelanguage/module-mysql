@@ -493,7 +493,9 @@ public:
    DLLLOCAL QoreHashNode* fetchRow(ExceptionSink* xsink);
    DLLLOCAL QoreListNode* fetchRows(int rows, ExceptionSink* xsink);
    DLLLOCAL QoreHashNode* fetchColumns(int rows, ExceptionSink* xsink);
+#ifdef _QORE_HAS_DBI_DESCRIBE
    DLLLOCAL QoreHashNode* describe(ExceptionSink *xsink);
+#endif
    DLLLOCAL bool next();
 };
 #endif // _QORE_HAS_PREPARED_STATMENT_API

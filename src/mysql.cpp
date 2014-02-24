@@ -957,6 +957,7 @@ QoreHashNode* QoreMysqlPreparedStatement::fetchColumns(int rows, ExceptionSink *
    return !getDataColumns(**h, xsink) ? h.release() : 0;
 }
 
+#ifdef _QORE_HAS_DBI_DESCRIBE
 QoreHashNode* QoreMysqlPreparedStatement::describe(ExceptionSink *xsink) {
    if (!myres) {
       xsink->raiseException("DBI:MYSQL-DESCRIBE-ERROR", "call SQLStatement::next() before calling SQLStatement::describe()");
@@ -1065,6 +1066,7 @@ QoreHashNode* QoreMysqlPreparedStatement::describe(ExceptionSink *xsink) {
 
    return h.release();
 }
+#endif
 
 bool QoreMysqlPreparedStatement::next() {
    assert(stmt);
@@ -1164,12 +1166,14 @@ static QoreHashNode* mysql_stmt_api_fetch_columns(SQLStatement* stmt, int rows, 
    return bg->fetchColumns(rows, xsink);
 }
 
+#ifdef _QORE_HAS_DBI_DESCRIBE
 static QoreHashNode* mysql_stmt_api_describe(SQLStatement* stmt, ExceptionSink* xsink) {
    QoreMysqlPreparedStatement* bg = (QoreMysqlPreparedStatement*)stmt->getPrivateData();
    assert(bg);
 
    return bg->describe(xsink);
 }
+#endif
 
 static bool mysql_stmt_api_next(SQLStatement* stmt, ExceptionSink* xsink) {
    QoreMysqlPreparedStatement* bg = (QoreMysqlPreparedStatement*)stmt->getPrivateData();
@@ -1538,7 +1542,9 @@ QoreStringNode* qore_mysql_module_init() {
    methods.add(QDBI_METHOD_STMT_FETCH_ROW, mysql_stmt_api_fetch_row);
    methods.add(QDBI_METHOD_STMT_FETCH_ROWS, mysql_stmt_api_fetch_rows);
    methods.add(QDBI_METHOD_STMT_FETCH_COLUMNS, mysql_stmt_api_fetch_columns);
+#ifdef _QORE_HAS_DBI_DESCRIBE
    methods.add(QDBI_METHOD_STMT_DESCRIBE, mysql_stmt_api_describe);
+#endif
    methods.add(QDBI_METHOD_STMT_NEXT, mysql_stmt_api_next);
    methods.add(QDBI_METHOD_STMT_CLOSE, mysql_stmt_api_close);
    methods.add(QDBI_METHOD_STMT_AFFECTED_ROWS, mysql_stmt_api_affected_rows);
