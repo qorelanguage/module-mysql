@@ -10,7 +10,7 @@
   * transaction management added
   * character set support added
 
-  Copyright 2003 - 2013 David Nichols
+  Copyright (C) 2003 - 2014 David Nichols
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -556,83 +556,134 @@ int QoreMysqlBindGroup::prepareAndBind(const QoreString* ostr, const QoreListNod
    return 0;
 }
 
+#define QMDC_LINE 1
+#define QMDC_BLOCK 2
+
 int QoreMysqlBindGroup::parse(const QoreListNode* args, ExceptionSink* xsink) {
    char quote = 0;
 
    const char *p = str->getBuffer();
    int index = 0;
    QoreString tmp(ds->getQoreEncoding());
+
+   int comment = 0;
+
    while (*p) {
-      if (!quote && (*p) == '%') { // found value marker
-	 const AbstractQoreNode* v = args ? args->retrieve_entry(index++) : NULL;
-	 int offset = p - str->getBuffer();
+      if (!quote) {
+         if (!comment) {
+            if ((*p) == '-' && (*(p+1)) == '-') {
+               comment = QMDC_LINE;
+               p += 2;
+               continue;
+            }
+            
+            if ((*p) == '#') {
+               comment = QMDC_LINE;
+               ++p;
+               continue;
+            }
+            
+            if ((*p) == '/' && (*(p+1)) == '*') {
+               comment = QMDC_BLOCK;
+               p += 2;
+               continue;
+            }
+         }
+         else {
+            if (comment == QMDC_LINE) {
+               if ((*p) == '\n' || ((*p) == '\r'))
+                  comment = 0;
+               ++p;
+               continue;
+            }
 
-	 p++;
-	 if ((*p) == 'd') {
-	    DBI_concat_numeric(&tmp, v);
-	    str->replace(offset, 2, &tmp);
-	    p = str->getBuffer() + offset + tmp.strlen();
-	    tmp.clear();
-	    continue;
-	 }
-	 if ((*p) == 's') {
-	    if (DBI_concat_string(&tmp, v, xsink))
+	    assert(comment == QMDC_BLOCK);
+            if ((*p) == '*' && (*(p+1)) == '/') {
+               comment = 0;
+               p += 2;
+               continue;
+            }
+
+            ++p;
+            continue;
+         }
+
+	 if ((*p) == '%') { // found value marker
+	    const AbstractQoreNode* v = args ? args->retrieve_entry(index++) : NULL;
+	    int offset = p - str->getBuffer();
+
+	    p++;
+	    if ((*p) == 'd') {
+	       DBI_concat_numeric(&tmp, v);
+	       str->replace(offset, 2, &tmp);
+	       p = str->getBuffer() + offset + tmp.strlen();
+	       tmp.clear();
+	       continue;
+	    }
+	    if ((*p) == 's') {
+	       if (DBI_concat_string(&tmp, v, xsink))
+		  return -1;
+	       str->replace(offset, 2, &tmp);
+	       p = str->getBuffer() + offset + tmp.strlen();
+	       tmp.clear();
+	       continue;
+	    }	 
+	    if ((*p) != 'v') {
+	       xsink->raiseException("DBI-EXEC-PARSE-EXCEPTION", "invalid value specification (expecting '%%v' or '%%d', got %%%c)", *p);
 	       return -1;
-	    str->replace(offset, 2, &tmp);
-	    p = str->getBuffer() + offset + tmp.strlen();
-	    tmp.clear();
+	    }
+	    p++;
+	    if (isalpha(*p)) {
+	       xsink->raiseException("DBI-EXEC-PARSE-EXCEPTION", "invalid value specification (expecting '%%v' or '%%d', got %%v%c)", *p);
+	       return -1;
+	    }
+
+	    // replace value marker with "?"
+	    // find byte offset in case string buffer is reallocated with replace()
+	    str->replace(offset, 2, "?");
+	    p = str->getBuffer() + offset;
+
+	    printd(5, "QoreMysqlBindGroup::parse() newstr=%s\n", str->getBuffer());
+	    printd(5, "QoreMysqlBindGroup::parse() adding value type=%s\n",v ? v->getTypeName() : "<NULL>");
+	    add(v);
 	    continue;
-	 }	 
-	 if ((*p) != 'v') {
-	    xsink->raiseException("DBI-EXEC-PARSE-EXCEPTION", "invalid value specification (expecting '%%v' or '%%d', got %%%c)", *p);
-	    return -1;
-	 }
-	 p++;
-	 if (isalpha(*p)) {
-	    xsink->raiseException("DBI-EXEC-PARSE-EXCEPTION", "invalid value specification (expecting '%%v' or '%%d', got %%v%c)", *p);
-	    return -1;
 	 }
 
-	 // replace value marker with "?"
-	 // find byte offset in case string buffer is reallocated with replace()
-	 str->replace(offset, 2, "?");
-	 p = str->getBuffer() + offset;
+	 if ((*p) == ':') { // found placeholder marker
+	    const char *w = p;
 
-	 printd(5, "QoreMysqlBindGroup::parse() newstr=%s\n", str->getBuffer());
-	 printd(5, "QoreMysqlBindGroup::parse() adding value type=%s\n",v ? v->getTypeName() : "<NULL>");
-	 add(v);
-      }
-      else if (!quote && (*p) == ':') { // found placeholder marker
-	 const char *w = p;
+	    p++;
+	    if (!isalpha(*p))
+	       continue;
 
-	 p++;
-	 if (!isalpha(*p))
+	    // get placeholder name
+	    QoreString tstr;
+	    while (isalnum(*p) || (*p) == '_')
+	       tstr.concat(*(p++));
+
+	    printd(5, "QoreMysqlBindGroup::parse() adding placeholder for '%s'\n", tstr.getBuffer());
+	    add(tstr.giveBuffer());
+
+	    // substitute "@" for ":" in bind name
+	    // find byte position of start of string
+	    int offset = w - str->getBuffer();
+	    str->replace(offset, 1, "@");
+
+	    printd(5, "QoreMysqlBindGroup::parse() offset=%d, new str=%s\n", offset, str->getBuffer());
 	    continue;
-
-	 // get placeholder name
-	 QoreString tstr;
-	 while (isalnum(*p) || (*p) == '_')
-	    tstr.concat(*(p++));
-
-	 printd(5, "QoreMysqlBindGroup::parse() adding placeholder for '%s'\n", tstr.getBuffer());
-	 add(tstr.giveBuffer());
-
-	 // substitute "@" for ":" in bind name
-	 // find byte position of start of string
-	 int offset = w - str->getBuffer();
-	 str->replace(offset, 1, "@");
-
-	 printd(5, "QoreMysqlBindGroup::parse() offset=%d, new str=%s\n", offset, str->getBuffer());
+	 }
       }
-      else if (((*p) == '\'') || ((*p) == '\"')) {
+
+      if (((*p) == '\'') || ((*p) == '\"')) {
 	 if (!quote)
 	    quote = *p;
 	 else if (quote == (*p))
 	    quote = 0;
 	 p++;
+	 continue;
       }
-      else
-	 p++;
+
+      p++;
    }
 
    return 0;
