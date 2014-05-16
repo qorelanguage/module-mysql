@@ -4,11 +4,11 @@
 
     Contents of this documentation:
     - @ref mysqlintro
-    - @ref options
-    - @ref trans
-    - @ref bind
-    - @ref storedprocs
-    - @ref releasenotes
+    - @ref mysqloptions
+    - @ref mysqltrans
+    - @ref mysqlbind
+    - @ref mysqlstoredprocs
+    - @ref mysqlreleasenotes
     
     @section mysqlintro Introduction to the mysql Module
 
@@ -50,13 +50,13 @@ major_version * 10000 + minor_version * 100 + sub_version
 
     Like all Qore components, the MySQL DBI driver is thread-safe.
 
-    @section options Driver Options
+    @section mysqloptions Driver Options
 
     When compiled again Qore 0.8.6+ the mysql driver support the following DBI options:
     - \c "optimal-numbers": return numeric types as an integer if possible, if not as an arbitrary-precision number
     - \c "string-numbers": return numeric types as strings (for backwards-compatibility)
     - \c "numeric-numbers": return numeric types as arbitrary-precision number values
-    - \c "timezone": accepts a string argument that can be either a region name (ex: \c "Europe/Prague") or a UTC offset (ex: \c "+01:00") to set the server's time zone rules; this is useful if connecting to a database server in a different time zone.  If this option is not set then the server's time zone is assumed to be the same as the client's time zone; see @ref timezone.
+    - \c "timezone": accepts a string argument that can be either a region name (ex: \c "Europe/Prague") or a UTC offset (ex: \c "+01:00") to set the server's time zone rules; this is useful if connecting to a database server in a different time zone.  If this option is not set then the server's time zone is assumed to be the same as the client's time zone; see @ref mysqltimezone.
 
     Options can be set in the \c Datasource or \c DatasourcePool constructors as in the following examples:
     @code
@@ -66,13 +66,13 @@ major_version * 10000 + minor_version * 100 + sub_version
 
     Options are stored separately for each connection.
 
-    @subsection number_options Number Options
+    @subsection mysql_number_options Number Options
 
     The number options (\c "optimal-numbers", \c "string-numbers", and \c "numeric-numbers") are all mutually-exclusive; setting one automatically disables the others.   These options also ignore their arguments; the last one set takes effect (also note that setting it with any value sets the option, even @ref False).
 
     The default if no other option is explicitly set is \c "optimal-numbers".  Note that this represents a change from previous versions where \c NUMERIC or \c DECIMAL values were returned as strings in order to avoid the loss of information.  To set the old behavior, set the \c "string-numbers" option when creating the \c Datasource or \c DatasourcePool object.
 
-    @section trans Transaction Management
+    @section mysqltrans Transaction Management
 
     This driver sets new connections to use transaction isolation level <tt>read committed</tt>> explicitly for every new connection to conform to Qore's default transaction management style.
 
@@ -80,9 +80,9 @@ major_version * 10000 + minor_version * 100 + sub_version
 
     Aditionally the <tt>CLIENT_FOUND_ROWS</tt> option is set for each connection, so <tt>Datasource::exec()</tt> will return the number of rows affected by insert/update queries, etc in a manner consistent with other Qore DBI drivers (if this option is not set and a single row is updated with the same values, 0 would be returned instead of 1 which would not confirm to the behavior of other Qore DBI drivers).
 
-    @section bind Binding and Types
+    @section mysqlbind Binding and Types
 
-    See @ref mysql_to_qore for information on how MySQL types are converted to Qore data types, and @ref binding_by_value for information on how Qore data types are converted to MySQL types when binding by value.
+    See @ref mysql_to_qore for information on how MySQL types are converted to Qore data types, and @ref mysql_binding_by_value for information on how Qore data types are converted to MySQL types when binding by value.
 
     Note that is is not necessary to give buffer types when binding placeholder values; the \c mysql driver will determine the needed type in advance and create the placeholder buffer automatically.
 
@@ -92,9 +92,9 @@ major_version * 10000 + minor_version * 100 + sub_version
 my date $now = $db.selectRow("select current_timestamp into :time").time;
     @endcode
 
-    @subsection timezone Time Zone Support
+    @subsection mysqltimezone Time Zone Support
 
-    The driver now sets the server's time zone rules when the connection is established; this is taken from the current time zone settings of the calling Program object and can also be overridden/changed by setting the \c "timezone" driver option (see @ref options).
+    The driver now sets the server's time zone rules when the connection is established; this is taken from the current time zone settings of the calling Program object and can also be overridden/changed by setting the \c "timezone" driver option (see @ref mysqloptions).
 
     All date/time values bound by value are converted to the server's time zone before binding to ensure that date/time values are stored correctly in the server.
 
@@ -111,7 +111,7 @@ my date $now = $db.selectRow("select current_timestamp into :time").time;
     |<tt>INT</tt>|<tt>Type::Int</tt>|direct conversion
     |<tt>BIGINT</tt>|<tt>Type::Int</tt>|direct conversion
     |<tt>YEAR</tt>|<tt>Type::Int</tt>|direct conversion
-    |<tt>DECIMAL</tt>|<tt>Type::Int</tt>, <tt>Type::String</tt>, or <tt>Type::Number</tt>|depends on @ref options "driver options"
+    |<tt>DECIMAL</tt>|<tt>Type::Int</tt>, <tt>Type::String</tt>, or <tt>Type::Number</tt>|depends on @ref mysqloptions "driver options"
     |<tt>FLOAT</tt>|<tt>Type::Float</tt>|direct conversion
     |<tt>DOUBLE</tt>|<tt>Type::Float</tt>|direct conversion
     |<tt>DATETIME</tt>|<tt>Type::Date</tt>|direct conversion
@@ -124,7 +124,7 @@ my date $now = $db.selectRow("select current_timestamp into :time").time;
     |<tt>BINARY</tt>|<tt>Type::Binary</tt>|direct conversion
     |<tt>VARBINARY</tt>|<tt>Type::Binary</tt>|direct conversion
 
-    @subsection binding_by_value Binding By Value
+    @subsection mysql_binding_by_value Binding By Value
 
     |QoreType|!MySQL Type|!Description
     |<tt>Type::String</tt>|<tt>MYSQL_TYPE_STRING</tt>|string data is mapped directly after any character encoding conversions (if necessary)
@@ -135,7 +135,7 @@ my date $now = $db.selectRow("select current_timestamp into :time").time;
     |<tt>Type::Float</tt>|<tt>MYSQL_TYPE_DOUBLE</tt>|direct mapping of data
     |<tt>Type::Number</tt>|<tt>MYSQL_TYPE_STRING</tt>|direct conversion to a string (this is the only input type MySQL provides for numeric/decimal values)
 
-    @section storedprocs Stored Procedures
+    @section mysqlstoredprocs Stored Procedures
 
     With appropriate versions of MySQL (version 5+), stored procedure execution is supported; the following is an example of a stored procedure call:
 
@@ -161,7 +161,7 @@ hash: (1 member)
   name : "Smith"
     @endcode
 
-    @section releasenotes Release Notes
+    @section mysqlreleasenotes Release Notes
 
     @subsection mysql202 mysql Driver Version 2.0.2
     - fixed formatting bugs in invalid value specification error messages
@@ -183,7 +183,7 @@ hash: (1 member)
       - \c "optimal-numbers": return numeric types as an integer if possible, if not as an arbitrary-precision number
       - \c "string-numbers": return numeric types as strings (for backwards-compatibility)
       - \c "numeric-numbers": return numeric types as arbitrary-precision number values
-      - \c "timezone": accepts a string argument that can be either a region name (ex: \c "Europe/Prague") or a UTC offset (ex: \c "+01:00") to set the server's time zone rules; this is useful if connecting to a database server in a different time zone.  If this option is not set then the server's time zone is assumed to be the same as the client's time zone; see @ref timezone.
-    - the default for the number options (see @ref number_options) is now "optimal-numbers" - meaning that \c NUMERIC or \c DECIMAL values are retrieved as <tt>int</tt> if possible, otherwise a <tt>number</tt> type is returned.\n
+      - \c "timezone": accepts a string argument that can be either a region name (ex: \c "Europe/Prague") or a UTC offset (ex: \c "+01:00") to set the server's time zone rules; this is useful if connecting to a database server in a different time zone.  If this option is not set then the server's time zone is assumed to be the same as the client's time zone; see @ref mysqltimezone.
+    - the default for the number options (see @ref mysql_number_options) is now "optimal-numbers" - meaning that \c NUMERIC or \c DECIMAL values are retrieved as <tt>int</tt> if possible, otherwise a <tt>number</tt> type is returned.\n
       For backwards-compatibility, set the \c "string-numbers" option to return \c NUMERIC or \c DECIMAL values as strings.
 */
