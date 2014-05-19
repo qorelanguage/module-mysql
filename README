@@ -25,6 +25,14 @@ Documentation: docs/mysql-module-doc.html
 
 test/example script: test/db-test.q
 
+LICENSE
+-------
+The source code is released under the LGPL 2.1 and GPL 2.1 licenses.  The GPL license must be used when linking with mysql libraries and the LGPL license is used with MariaDB.
+the binary module is automatically tagged with the license type, and a module tagged with a GPL license cannot be loaded by the Qore binary initialized in LGPL (or MIT) mode;
+it can only be loaded if the Qore library is initialized in GPL mode.
+See COPYING.LGPL and COPYING.GPL for details on the open-source licenses.
+
+
 BUILD AND INSTALL
 -----------------
 
