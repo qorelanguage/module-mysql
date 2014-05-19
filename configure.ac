@@ -316,6 +316,25 @@ AC_ARG_WITH([mysql],
                     [MySQL base directory])],
     [if test ! -d "${with_mysql}"; then AC_MSG_ERROR(directory ${with_mysql} does not exist for --with-mysql); unset with_mysql; fi])
 
+AC_ARG_WITH([mysql-libs],
+    [AS_HELP_STRING([--with-mysql-libs@<:@=DIR@:>@],
+                    [MySQL library base directory])],
+    [if test ! -d "${with_mysql_libs}"; then AC_MSG_ERROR(directory ${with_mysql_livs} does not exist for --with-mysql-libs); unset with_mysql_libs; fi])
+
+AC_ARG_WITH([mysql-includes],
+    [AS_HELP_STRING([--with-mysql-includes@<:@=DIR@:>@],
+                    [MySQL includes base directory])],
+    [if test ! -d "${with_mysql_includes}"; then AC_MSG_ERROR(directory ${with_mysql_includes} does not exist for --with-mysql-includes); unset with_mysql_includes; fi])
+
+check_mysql_includes() {
+   if test "$with_mysql_includes" != "/usr/include"; then
+      mysql_app_includes=true
+   fi
+   if test "$with_mysql_libs" != "/lib${LIBSUFFIX}"; then
+      mysql_app_libs=true
+   fi
+}
+
 check_mysql() {
     a="$1"
     if test \( "$a" = "/" -o -z "$a" \) -a -h "$a/lib${LIBSUFFIX}"; then
@@ -387,12 +406,7 @@ check_mysql() {
     if test -z "$with_mysql_libs"; then
        unset with_mysql_includes
     else
-	if test "$with_mysql_includes" != "/usr/include"; then
-	   mysql_app_includes=true
-        fi
-	if test "$with_mysql_libs" != "/lib${LIBSUFFIX}"; then
-	   mysql_app_libs=true
-	fi
+        check_mysql_includes
     fi
 }
 
@@ -400,19 +414,50 @@ check_mysql() {
 if test "${with_mysql}" != "no"; then
    AC_MSG_CHECKING([for mysql includes and libraries])
 
-   if test -n "$with_mysql"; then
-      check_mysql "$with_mysql"
-      if test -z "$with_mysql_includes"; then
-	 AC_MSG_ERROR([not found in $with_mysql])
+   if test -n "${with_mysql_includes}"; then
+      if test ! -f "${with_mysql_includes}/mysql.h"; then
+         if test -f "${with_mysql_includes}/mysql/mysql.h"; then
+	    with_mysql_includes="${with_mysql_includes}/mysql"
+            check_mysql_includes
+         else
+            AC_MSG_ERROR([mysql.h not found in $with_mysql_includes])
+         fi
+      fi
+      if test -n "${with_mysql_libs}"; then
+         if test ! -f "${with_mysql_libs}/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+	    if test ! -f "${with_mysql_libs}/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+               with_mysql_libs="${with_mysql_libs}/mysql"
+            else
+               if test -f "${with_mysql_libs}/libmysqlclient_r.a"; then
+                  mysql_static=1
+               elif test -f "${with_mysql_libs}/mysql/libmysqlclient_r.a"; then
+                  with_mysql_libs="${with_mysql_libs}/mysql"
+                  mysql_static=1
+      	       else
+                  AC_MSG_ERROR([mysql client library not found in $with_mysql_libs])
+               fi
+            fi
+         fi
+      else
+         AC_MSG_ERROR([--with-mysql-libs must also be used when --with-mysql-incudes is used])
+      fi 
+   elif test -n "${with_mysql_libs}"; then
+      AC_MSG_ERROR([--with-mysql-includes must also be used when --with-mysql-libs is used])
+   else
+      if test -n "$with_mysql"; then
+         check_mysql "$with_mysql"
+         if test -z "$with_mysql_includes"; then
+	    AC_MSG_ERROR([not found in $with_mysql])
+         fi
+      else
+         for dir in $MYSQL_DIR "${with_lib_prefix}" "${find_prefix}" / /usr /usr/local/mysql /opt/mysql /usr/mysql /sw /opt/local /opt/sfw /usr/sfw; do
+            check_mysql $dir
+            if test -n "$with_mysql_includes"; then
+	       break;
+            fi
+         done
       fi
    fi
-
-   for dir in $MYSQL_DIR "${with_lib_prefix}" "${find_prefix}" / /usr /usr/local/mysql /opt/mysql /usr/mysql /sw /opt/local /opt/sfw /usr/sfw; do
-      check_mysql $dir
-      if test -n "$with_mysql_includes"; then
-	 break;
-      fi
-   done
 
    if test -n "$with_mysql_includes"; then
       if test -n "$mysql_static"; then
