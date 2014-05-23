@@ -42,7 +42,11 @@
 
 DLLEXPORT char qore_module_name[] = "mysql";
 DLLEXPORT char qore_module_version[] = PACKAGE_VERSION;
+#if defined(MARIADB_BASE_VERSION)
+DLLEXPORT char qore_module_description[] = "Mariadb/MySQL database driver";
+#else
 DLLEXPORT char qore_module_description[] = "Mysql database driver";
+#endif
 DLLEXPORT char qore_module_author[] = "David Nichols <david@qore.org>";
 DLLEXPORT char qore_module_url[] = "http://qore.org";
 DLLEXPORT int qore_module_api_major = QORE_MODULE_API_MAJOR;
@@ -50,10 +54,12 @@ DLLEXPORT int qore_module_api_minor = QORE_MODULE_API_MINOR;
 DLLEXPORT qore_module_init_t qore_module_init = qore_mysql_module_init;
 DLLEXPORT qore_module_ns_init_t qore_module_ns_init = qore_mysql_module_ns_init;
 DLLEXPORT qore_module_delete_t qore_module_delete = qore_mysql_module_delete;
-#ifdef HAVE_MYSQL_CLIENT_LICENSE
+#if defined(HAVE_MYSQL_CLIENT_LICENSE) || defined(MARIADB_BASE_VERSION)
 DLLEXPORT qore_license_t qore_module_license = QL_LGPL;
+DLLEXPORT char qore_module_license_str[] = "LGPL 2.1";
 #else
 DLLEXPORT qore_license_t qore_module_license = QL_GPL;
+DLLEXPORT char qore_module_license_str[] = "GPL 2.1";
 #endif
 
 // driver capabilities

@@ -5,7 +5,8 @@ Version 2.0.2
 * fixed formatting bugs in invalid value specification error messages
 * updated configure to find and compile with MariaDB and Percona includes & libs
 * placeholders and quotes in SQL comments are ignored
-
+* tag module with LGPL license if compiled with MariaDB
+* added license string info for use with Qore >= 0.8.10
 
 -------------
 Version 2.0.1

@@ -5,7 +5,7 @@ SUBDIRS = src
 noinst_HEADERS = src/qore-mysql.h \
 	src/qore-mysql-module.h
 
-EXTRA_DIST = COPYING ChangeLog AUTHORS README \
+EXTRA_DIST = COPYING.LGPL COPYING.GPL ChangeLog AUTHORS README \
 	RELEASE-NOTES \
 	test/db-test.q \
 	test/sql-stmt.q \
