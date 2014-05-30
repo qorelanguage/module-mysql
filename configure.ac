@@ -450,7 +450,7 @@ if test "${with_mysql}" != "no"; then
 	    AC_MSG_ERROR([not found in $with_mysql])
          fi
       else
-         for dir in $MYSQL_DIR "${with_lib_prefix}" "${find_prefix}" / /usr /usr/local/mysql /opt/mysql /usr/mysql /sw /opt/local /opt/sfw /usr/sfw; do
+         for dir in $MYSQL_DIR "${with_lib_prefix}" "${find_prefix}" / /usr /usr/local /usr/local/mysql /opt/mysql /usr/mysql /sw /opt/local /opt/sfw /usr/sfw; do
             check_mysql $dir
             if test -n "$with_mysql_includes"; then
 	       break;
