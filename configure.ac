@@ -104,7 +104,7 @@ case "${host_os}" in
      		windows=yes
 		mingw=yes
 		#CPPFLAGS="$CPPFLAGS -D_WIN32_WINNT=0x0501"
-		LDFLAGS="$LDFLAGS -lwsock32 -lws2_32 -lgdi32 -lz -lsecur32"
+		LDFLAGS="$LDFLAGS -lwsock32 -lws2_32 -lgdi32 -lz -lsecur32 -lpthread"
 		#make_dll=yes
 		CPPFLAGS="$CPPFLAGS -DBUILDING_DLL=1"
 		MODULE_LDFLAGS="-no-undefined"
@@ -400,7 +400,7 @@ check_mysql() {
        mysql_static=1
     elif test "$windows" = yes -a -f "$lib/libmysql.dll"; then
        with_mysql_libs=$lib
-       mysql_libname=mysqlclient_r
+       mysql_libname=mysql
        mysql_winlib=1
     else
        mld=`ls -rdt $a/lib/mysql* 2>/dev/null | tail -1`
