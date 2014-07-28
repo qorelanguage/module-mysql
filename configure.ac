@@ -506,7 +506,7 @@ if test "${with_mysql}" = yes; then
           MYSQL_LIBS="-L$with_mysql_libs -l${mysql_libname}"
      else
         if test -n "$mysql_app_libs"; then
- 	   MYSQL_LIBS="-L$with_mysql_libs -l"
+ 	   MYSQL_LIBS="-L$with_mysql_libs -l${mysql_libname}"
 	else
 	   MYSQL_LIBS="-l${mysql_libname}"
 	fi
