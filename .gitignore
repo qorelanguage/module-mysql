@@ -25,3 +25,7 @@ src/.deps/
 src/.libs/
 src/Makefile
 src/Makefile.in
+src/*.dox.h
+src/qc_*.cpp
+src/ql_*.cpp
+src/QC_*.cpp
