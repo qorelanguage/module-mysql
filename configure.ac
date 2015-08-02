@@ -366,8 +366,10 @@ check_mysql() {
        with_mysql_includes=$inc
     elif test -f "$inc/mysql/mysql.h"; then
        with_mysql_includes=$inc/mysql
-    elif test -f "$inc/mariadb/mysql/mysql.h"; then
-       with_mysql_includes=$inc/mariadb/mysql
+    elif test -f "$inc/mysql/mysql.h"; then
+       with_mysql_includes=$inc/mysql
+    elif test -f "$inc/mariadb/mysql.h"; then
+       with_mysql_includes=$inc/mariadb
     elif test -f "$inc/percona/mysql/mysql.h"; then
        with_mysql_includes=$inc/percona/mysql
     else
@@ -418,6 +420,9 @@ check_mysql() {
        with_mysql_libs=$lib
        mysql_libname=mysql
        mysql_winlib=1
+    elif test -f "$lib/libmariadb.${SHLIB_SUFFIX}"; then
+       with_mysql_libs=$lib
+       mysql_libname=mariadb
     else
        mld=`ls -rdt $a/lib/mysql* 2>/dev/null | tail -1`
        if test -n "$mld"; then
