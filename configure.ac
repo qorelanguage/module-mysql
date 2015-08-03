@@ -368,6 +368,8 @@ check_mysql() {
        with_mysql_includes=$inc/mysql
     elif test -f "$inc/mysql/mysql.h"; then
        with_mysql_includes=$inc/mysql
+    elif test -f "$inc/mariadb/mysql/mysql.h"; then
+       with_mysql_includes=$inc/mariadb/mysql
     elif test -f "$inc/mariadb/mysql.h"; then
        with_mysql_includes=$inc/mariadb
     elif test -f "$inc/percona/mysql/mysql.h"; then
