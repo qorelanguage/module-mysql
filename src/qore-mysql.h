@@ -25,7 +25,7 @@
 
 #define _QORE_MYSQL_H
 
-#include "../config.h"
+#include <config.h>
 
 #include <qore/Qore.h>
 
