@@ -393,19 +393,19 @@ check_mysql() {
 
     lib="$a/lib${LIBSUFFIX}"
 
-    if test -f "$lib/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+    if test -e "$lib/libmysqlclient_r.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib
        mysql_libname=mysqlclient_r
-    elif test -f "$lib/libmariadbclient_r.${SHLIB_SUFFIX}"; then
+    elif test -e "$lib/libmariadbclient_r.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib
        mysql_libname=mariadbclient_r
-    elif test -f "$lib/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+    elif test -e "$lib/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib/mysql
        mysql_libname=mysqlclient_r
-    elif test -f "$lib/mariadb/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+    elif test -e "$lib/mariadb/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib/mariadb/mysql
        mysql_libname=mysqlclient_r
-    elif test -f "$lib/percona/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+    elif test -e "$lib/percona/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib/percona/mysql
        mysql_libname=mysqlclient_r
     elif test -f "$lib/libmysqlclient_r.a"; then
@@ -424,19 +424,19 @@ check_mysql() {
        with_mysql_libs=$lib
        mysql_libname=mysql
        mysql_winlib=1
-    elif test -f "$lib/libmariadb.${SHLIB_SUFFIX}"; then
+    elif test -e "$lib/libmariadb.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib
        mysql_libname=mariadb
     else
        mld=`ls -rdt $a/lib/mysql* 2>/dev/null | tail -1`
        if test -n "$mld"; then
-          if test -f "$mld/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+          if test -e "$mld/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
 	     with_mysql_libs="$mld/mysql"
  	     mysql_libname=mysqlclient_r
-          elif test -f "$mld/mariadb/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+          elif test -e "$mld/mariadb/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
 	     with_mysql_libs="$mld/mariadb/mysql"
  	     mysql_libname=mysqlclient_r
-          elif test -f "$mld/percona/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+          elif test -e "$mld/percona/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
 	     with_mysql_libs="$mld/percona/mysql"
  	     mysql_libname=mysqlclient_r
 	  elif test -f "$mld/mysql/libmysqlclient_r.a"; then
@@ -468,8 +468,8 @@ if test "${with_mysql}" != "no"; then
          fi
       fi
       if test -n "${with_mysql_libs}"; then
-         if test ! -f "${with_mysql_libs}/libmysqlclient_r.${SHLIB_SUFFIX}"; then
-	    if test ! -f "${with_mysql_libs}/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+         if test ! -e "${with_mysql_libs}/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+	    if test -e "${with_mysql_libs}/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
                with_mysql_libs="${with_mysql_libs}/mysql"
             else
                if test -f "${with_mysql_libs}/libmysqlclient_r.a"; then
@@ -524,6 +524,9 @@ if test "${with_mysql}" = yes; then
      # only set include path if necessary
      if test -n "$mysql_app_includes"; then
           MYSQL_INCLUDES="-I$with_mysql_includes"
+     fi
+     if test -z "$mysql_libname"; then
+	 mysql_libname=mysqlclient_r
      fi
      if test -n "$mysql_static"; then
           MYSQL_LIBS="$with_mysql_libs/lib${mysql_libname}.a"
@@ -604,7 +607,7 @@ find_qore() {
             AC_MSG_RESULT([$lib (forced static)])
         fi
     else
-        if test -f "$lib/libqore.${SHLIB_SUFFIX}"; then
+        if test -e "$lib/libqore.${SHLIB_SUFFIX}"; then
             if test "$lib" != "/lib" -a "$lib" != "/usr/lib"; then
                 QORE_LDFLAGS="-L$lib"
             fi
