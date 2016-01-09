@@ -335,12 +335,14 @@ AC_ARG_WITH([mysql],
 AC_ARG_WITH([mysql-libs],
     [AS_HELP_STRING([--with-mysql-libs@<:@=DIR@:>@],
                     [MySQL library base directory])],
-    [if test ! -d "${with_mysql_libs}"; then AC_MSG_ERROR(directory ${with_mysql_livs} does not exist for --with-mysql-libs); unset with_mysql_libs; fi])
+    [if test ! -d "${with_mysql_libs}"; then AC_MSG_ERROR(directory ${with_mysql_libs} does not exist for --with-mysql-libs); unset with_mysql_libs; fi],
+    [with_mysql_libs="$MYSQL_LIBS"])
 
 AC_ARG_WITH([mysql-includes],
     [AS_HELP_STRING([--with-mysql-includes@<:@=DIR@:>@],
                     [MySQL includes base directory])],
-    [if test ! -d "${with_mysql_includes}"; then AC_MSG_ERROR(directory ${with_mysql_includes} does not exist for --with-mysql-includes); unset with_mysql_includes; fi])
+    [if test ! -d "${with_mysql_includes}"; then AC_MSG_ERROR(directory ${with_mysql_includes} does not exist for --with-mysql-includes); unset with_mysql_includes; fi],
+    [with_mysql_includes="$MYSQL_INCLUDES"])
 
 check_mysql_includes() {
    if test "$with_mysql_includes" != "/usr/include"; then
