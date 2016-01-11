@@ -39,7 +39,7 @@ BUILD AND INSTALL
 If your mysql/mariadb installation is in a non-standard location, set one of the following environment variables before running configure:
 * MYSQL_DIR: the main mysql/mariadb directory (include and lib subdirs must be present)
 * MYSQL_INCLUDES: the directory containing the mysql/mariadb header files
-* MYSQL_LIBS: the directory continain the mysql/mariadb libraries
+* MYSQL_LIBS: the directory containing the mysql/mariadb libraries
 
 configure
 make
