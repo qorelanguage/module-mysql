@@ -56,73 +56,73 @@ SHLIB_SUFFIX=so
 #echo host_os=${host_os}sss
 case "${host_os}" in
      *linux*)   # set compile flags for Linux
-		CPPFLAGS="${CPPFLAGS} -D_GNU_SOURCE"
-		SHLIB_SUFFIX=so
-		AC_DEFINE(LINUX, 1, if compiling on Linux)
-		;;
+                CPPFLAGS="${CPPFLAGS} -D_GNU_SOURCE"
+                SHLIB_SUFFIX=so
+                AC_DEFINE(LINUX, 1, if compiling on Linux)
+                ;;
      *solaris*) # set compile flags for Solaris
-		CPPFLAGS="${CPPFLAGS} -D_POSIX_C_SOURCE=199506L -D_XPG4_2 -D_XPG5 -D__EXTENSIONS__"
-		# for checking for some network functions on Solaris
-		LDFLAGS="$LDFLAGS -lnsl"
-		# assume we are using CC if not using g++, add -norunpath to link flags in this case
-		if test "$GXX" != "yes"; then
-		   CXXFLAGS="${CXXFLAGS} -mt"
-		   LDFLAGS="$LDFLAGS -norunpath -mt"
-		fi
-		AC_DEFINE(SOLARIS, 1, if compiling on Solaris)
-		# add -ldl to libs if on Solaris 8
-		if test "${host_os}" = "solaris2.8"; then
-		   OTHER_LIBS="$OTHER_LIBS -ldl"
-		fi
-		solaris=yes
-	        ;;
+                CPPFLAGS="${CPPFLAGS} -D_POSIX_C_SOURCE=199506L -D_XPG4_2 -D_XPG5 -D__EXTENSIONS__"
+                # for checking for some network functions on Solaris
+                LDFLAGS="$LDFLAGS -lnsl"
+                # assume we are using CC if not using g++, add -norunpath to link flags in this case
+                if test "$GXX" != "yes"; then
+                   CXXFLAGS="${CXXFLAGS} -mt"
+                   LDFLAGS="$LDFLAGS -norunpath -mt"
+                fi
+                AC_DEFINE(SOLARIS, 1, if compiling on Solaris)
+                # add -ldl to libs if on Solaris 8
+                if test "${host_os}" = "solaris2.8"; then
+                   OTHER_LIBS="$OTHER_LIBS -ldl"
+                fi
+                solaris=yes
+                ;;
      *darwin*)  SHLIB_SUFFIX=dylib
-		# libtool 1.5.* is creating modules on Darwin 8.* (OS/X 10.4.*) with a .so suffix for some reason
-		MODULE_SUFFIX=so
-		AC_DEFINE(DARWIN, 1, [if compiling on Darwin])
-		# use gnutar on darwin to avoid getting those pesky resource files
-		AMTAR=gnutar
-		darwin=true
-		;;
+                # libtool 1.5.* is creating modules on Darwin 8.* (OS/X 10.4.*) with a .so suffix for some reason
+                MODULE_SUFFIX=so
+                AC_DEFINE(DARWIN, 1, [if compiling on Darwin])
+                # use gnutar on darwin to avoid getting those pesky resource files
+                AMTAR=gnutar
+                darwin=true
+                ;;
      *hpux*)    if test "$host_cpu" = "ia64"; then
-     		   SHLIB_SUFFIX=so
-		else  # assume hppa (PA-RISC)
-     		   SHLIB_SUFFIX=sl
-		   AC_DEFINE(SHLIB_SUFFIX, "sl", shared library suffix)
-		fi
-		# add "-AA" and -D__STDC_EXT__ to aCC commandline to enable a clean compile
-		if test -n "`echo $CXX|grep aCC`"; then
-		   CXXFLAGS="$CXXFLAGS -AA -D__STDC_EXT__ -D_RWSTD_MULTI_THREAD"
-		fi
-		AC_DEFINE(HPUX, 1, if compiling on HP-UX)
-		;;
+                   SHLIB_SUFFIX=so
+                else  # assume hppa (PA-RISC)
+                   SHLIB_SUFFIX=sl
+                   AC_DEFINE(SHLIB_SUFFIX, "sl", shared library suffix)
+                fi
+                # add "-AA" and -D__STDC_EXT__ to aCC commandline to enable a clean compile
+                if test -n "`echo $CXX|grep aCC`"; then
+                   CXXFLAGS="$CXXFLAGS -AA -D__STDC_EXT__ -D_RWSTD_MULTI_THREAD"
+                fi
+                AC_DEFINE(HPUX, 1, if compiling on HP-UX)
+                ;;
      *cygwin*)  SHLIB_SUFFIX=dll
-     		CPPFLAGS=-mwin32
-		windows=yes
-     		;;
+                CPPFLAGS=-mwin32
+                windows=yes
+                ;;
      *mingw32*) SHLIB_SUFFIX=dll
-     		windows=yes
-		mingw=yes
-		#CPPFLAGS="$CPPFLAGS -D_WIN32_WINNT=0x0501"
-		LDFLAGS="$LDFLAGS -lwsock32 -lws2_32 -lgdi32 -lz -lsecur32 -lpthread"
-		#make_dll=yes
-		CPPFLAGS="$CPPFLAGS -DBUILDING_DLL=1"
-		MODULE_LDFLAGS="-no-undefined"
-		OS=Windows
-		# set LIB_PREFIX if not already set
-		if test -z "$LIB_PREFIX"; then
-   		   AC_MSG_CHECKING([for mingw32 library prefix])
-		   cc_loc=`which $CXX|head -1`
-		   mingw_base=`dirname $cc_loc|sed 's/\/@<:@^/@:>@*$//'`
-		   cc_targ=`echo $CXX|sed s/-g++$//`
-		   if test -d $mingw_base/$cc_targ; then
-		      LIB_PREFIX=$mingw_base/$cc_targ
-		      AC_MSG_RESULT([$LIB_PREFIX])
-		   else
-		      AC_MSG_RESULT([not found])
-		   fi
-		fi
-		;;
+                windows=yes
+                mingw=yes
+                #CPPFLAGS="$CPPFLAGS -D_WIN32_WINNT=0x0501"
+                LDFLAGS="$LDFLAGS -lwsock32 -lws2_32 -lgdi32 -lz -lsecur32 -lpthread"
+                #make_dll=yes
+                CPPFLAGS="$CPPFLAGS -DBUILDING_DLL=1"
+                MODULE_LDFLAGS="-no-undefined"
+                OS=Windows
+                # set LIB_PREFIX if not already set
+                if test -z "$LIB_PREFIX"; then
+                   AC_MSG_CHECKING([for mingw32 library prefix])
+                   cc_loc=`which $CXX|head -1`
+                   mingw_base=`dirname $cc_loc|sed 's/\/@<:@^/@:>@*$//'`
+                   cc_targ=`echo $CXX|sed s/-g++$//`
+                   if test -d $mingw_base/$cc_targ; then
+                      LIB_PREFIX=$mingw_base/$cc_targ
+                      AC_MSG_RESULT([$LIB_PREFIX])
+                   else
+                      AC_MSG_RESULT([not found])
+                   fi
+                fi
+                ;;
      *)         AC_WARN(Unknown platform ${host_os})
                 ;;
 esac
@@ -134,7 +134,7 @@ AC_SUBST(MODULE_SUFFIX)
 
 AC_ARG_ENABLE([64bit],
   [AS_HELP_STRING([--enable-64bit],
-		  [enable 64bit support (default: auto)])],
+                  [enable 64bit support (default: auto)])],
   [case "${enable_64bit}" in
        yes|no) ;;
        *)      AC_MSG_ERROR(bad value ${enable_64bit} for --enable-64bit) ;;
@@ -152,21 +152,21 @@ if test "$enable_64bit" = "auto"; then
                  ;;
        *)        case "${host_os}" in
                      darwin*)   mv=`uname -r|cut -f1 -d.`
- 		                if test $mv -ge 10 -a "${host_cpu}" = "i386"; then
-		         	    enable_64bit=yes
-		      		fi
-		     ;;
-		     solaris*)  if test "${host_cpu}" = "i386"; then
-		     	            # if we are running on a 64-bit machine, then enable a 64-bit build
-				    if test -n "`isainfo -v 2>/dev/null| grep 64-bit`"; then
-		         	        enable_64bit=yes
-		     		    fi
-		     	        fi
-		     ;;
-       		 esac
-		 if test "$enable_64bit" = "auto"; then
-		     enable_64bit=no
-		 fi
+                                if test $mv -ge 10 -a "${host_cpu}" = "i386"; then
+                                    enable_64bit=yes
+                                fi
+                     ;;
+                     solaris*)  if test "${host_cpu}" = "i386"; then
+                                    # if we are running on a 64-bit machine, then enable a 64-bit build
+                                    if test -n "`isainfo -v 2>/dev/null| grep 64-bit`"; then
+                                        enable_64bit=yes
+                                    fi
+                                fi
+                     ;;
+                 esac
+                 if test "$enable_64bit" = "auto"; then
+                     enable_64bit=no
+                 fi
                  ;;
     esac
 fi
@@ -182,98 +182,98 @@ AC_ARG_WITH([libsuffix],
 # FIXME: add test on HP-UX if the compiler can generate the appropriate binaries
 if test "$enable_64bit" = "yes"; then
    case "${host_os}" in
-      *linux*)	if test "$GXX" = "yes"; then
-		   CXXFLAGS="$CXXFLAGS -m64"
-		fi
-		# only set LIBSUFFIX=64 if /usr/lib64 exists
-		if test "$LIBSUFFIX_SET" != "yes"; then
-		  if test -d /usr/lib64; then
-		     LIBSUFFIX=64
+      *linux*)  if test "$GXX" = "yes"; then
+                   CXXFLAGS="$CXXFLAGS -m64"
+                fi
+                # only set LIBSUFFIX=64 if /usr/lib64 exists
+                if test "$LIBSUFFIX_SET" != "yes"; then
+                  if test -d /usr/lib64; then
+                     LIBSUFFIX=64
                   fi
-		  target="${host_cpu}-${host_os}"
-		  if test -d /usr/lib/$target; then
-		     LIBSUFFIX=/$target
+                  target="${host_cpu}-${host_os}"
+                  if test -d /usr/lib/$target; then
+                     LIBSUFFIX=/$target
                   fi
-		  AC_SUBST(LIBSUFFIX)
-		fi
-		;;
-      *hpux*)	if test "$host_cpu" = "ia64"; then
+                  AC_SUBST(LIBSUFFIX)
+                fi
+                ;;
+      *hpux*)   if test "$host_cpu" = "ia64"; then
                     if test -n "`echo $CXX|grep aCC`"; then
                         CXXFLAGS="$CXXFLAGS +DD64"
                     elif test "$GXX" = "yes"; then
                         CXXFLAGS="$CXXFLAGS -mlp64"
                     fi
                 else
-		    if test -n "`echo $CXX|grep aCC`"; then
-		        CXXFLAGS="$CXXFLAGS +DA2.0W"
-		    elif test "$GXX" = "yes"; then
-			CXXFLAGS="$CXXFLAGS -march=2.0"
-		    fi
-		fi
-		;;
+                    if test -n "`echo $CXX|grep aCC`"; then
+                        CXXFLAGS="$CXXFLAGS +DA2.0W"
+                    elif test "$GXX" = "yes"; then
+                        CXXFLAGS="$CXXFLAGS -march=2.0"
+                    fi
+                fi
+                ;;
      *solaris*) if test "$GXX" = "yes"; then
-		    if test "$host_cpu" = "sparc"; then
-		        CXXFLAGS="$CXXFLAGS -mcpu=ultrasparc3 -m64"  # NOTE we compile for minimum ultrasparc 3 in 64-bit mode
-		    else
-		        CXXFLAGS="$CXXFLAGS -m64"
-		    fi
-		else
-		    CC_MAJOR=`$CXX -V 2>&1 | head -1| cut -f1 -d.|cut -d\  -f4`
-		    CC_MINOR=`$CXX -V 2>&1 | head -1| cut -f2 -d.|cut -d\  -f1`
-		    if test "$CC_MAJOR" -gt 5 -o \( "$CC_MAJOR" -eq 5 -a "$CC_MINOR" -ge 10 \); then
-		        CXXFLAGS="$CXXFLAGS -m64"
-		    else
-			CXXFLAGS="$CXXFLAGS -xarch=generic64"
-		    fi
-		fi
-		;;
-     *darwin*)	if test "$GXX" = "yes"; then
-		   CXXFLAGS="$CXXFLAGS -m64"
-		fi
-		# set ARCH to x86_64 to be consistent with other intel 64-bit builds
-		if test "$host_cpu" = "i386"; then
-		   ARCH=x86_64
-		fi
-		;;
+                    if test "$host_cpu" = "sparc"; then
+                        CXXFLAGS="$CXXFLAGS -mcpu=ultrasparc3 -m64"  # NOTE we compile for minimum ultrasparc 3 in 64-bit mode
+                    else
+                        CXXFLAGS="$CXXFLAGS -m64"
+                    fi
+                else
+                    CC_MAJOR=`$CXX -V 2>&1 | head -1| cut -f1 -d.|cut -d\  -f4`
+                    CC_MINOR=`$CXX -V 2>&1 | head -1| cut -f2 -d.|cut -d\  -f1`
+                    if test "$CC_MAJOR" -gt 5 -o \( "$CC_MAJOR" -eq 5 -a "$CC_MINOR" -ge 10 \); then
+                        CXXFLAGS="$CXXFLAGS -m64"
+                    else
+                        CXXFLAGS="$CXXFLAGS -xarch=generic64"
+                    fi
+                fi
+                ;;
+     *darwin*)  if test "$GXX" = "yes"; then
+                   CXXFLAGS="$CXXFLAGS -m64"
+                fi
+                # set ARCH to x86_64 to be consistent with other intel 64-bit builds
+                if test "$host_cpu" = "i386"; then
+                   ARCH=x86_64
+                fi
+                ;;
    esac
    SYBLIBSUFFIX=64
    RVLIBSUFFIX=64
    bits=64
 else
    case "${host_os}" in
-     *linux*)	if test "$GXX" = "yes"; then
-		   CXXFLAGS="$CXXFLAGS -m32"
-		fi
+     *linux*)   if test "$GXX" = "yes"; then
+                   CXXFLAGS="$CXXFLAGS -m32"
+                fi
                 # multiarch
                 if test "$LIBSUFFIX_SET" != "yes"; then
-		   if test -a "$host_cpu" = "x86_64" -a -d /usr/lib32; then
-		      LIBSUFFIX=32
+                   if test -a "$host_cpu" = "x86_64" -a -d /usr/lib32; then
+                      LIBSUFFIX=32
                    fi
-		   AC_SUBST(LIBSUFFIX)
-		fi
-		;;
+                   AC_SUBST(LIBSUFFIX)
+                fi
+                ;;
      *darwin*)  if test "$GXX" = "yes"; then
                    CXXFLAGS="$CXXFLAGS -m32"
                 fi
                 ;;
-     *hpux*)	if test "$host_cpu" != "ia64"; then
-		    if test "$GXX" = "yes"; then
-		        CXXFLAGS="$CXXFLAGS -march=2.0"
-		    elif test -n "`echo $CXX|grep aCC`" -a "$host_cpu" != "ia64"; then
-		        CXXFLAGS="$CXXFLAGS +DA2.0N"   # NOTE we compile for PA-RISC 2.0 32-bit, not PA-RISC 1.1
-		    fi
-		fi
-		;;
+     *hpux*)    if test "$host_cpu" != "ia64"; then
+                    if test "$GXX" = "yes"; then
+                        CXXFLAGS="$CXXFLAGS -march=2.0"
+                    elif test -n "`echo $CXX|grep aCC`" -a "$host_cpu" != "ia64"; then
+                        CXXFLAGS="$CXXFLAGS +DA2.0N"   # NOTE we compile for PA-RISC 2.0 32-bit, not PA-RISC 1.1
+                    fi
+                fi
+                ;;
      *solaris*) if test "$GXX" = "yes"; then
-		    if test "$host_cpu" = "sparc"; then
-		        CXXFLAGS="$CXXFLAGS -mcpu=v8 -m32"
-		    else
-		        CXXFLAGS="$CXXFLAGS -m32"
-		    fi
-		else
-		    CXXFLAGS="$CXXFLAGS -xarch=generic"
-		fi
-		;;
+                    if test "$host_cpu" = "sparc"; then
+                        CXXFLAGS="$CXXFLAGS -mcpu=v8 -m32"
+                    else
+                        CXXFLAGS="$CXXFLAGS -m32"
+                    fi
+                else
+                    CXXFLAGS="$CXXFLAGS -xarch=generic"
+                fi
+                ;;
    esac
    if test "$host_cpu" = "x86_64"; then
       cpu_family=i386
@@ -335,12 +335,14 @@ AC_ARG_WITH([mysql],
 AC_ARG_WITH([mysql-libs],
     [AS_HELP_STRING([--with-mysql-libs@<:@=DIR@:>@],
                     [MySQL library base directory])],
-    [if test ! -d "${with_mysql_libs}"; then AC_MSG_ERROR(directory ${with_mysql_livs} does not exist for --with-mysql-libs); unset with_mysql_libs; fi])
+    [if test ! -d "${with_mysql_libs}"; then AC_MSG_ERROR(directory ${with_mysql_libs} does not exist for --with-mysql-libs); unset with_mysql_libs; fi],
+    [with_mysql_libs="$MYSQL_LIBS"])
 
 AC_ARG_WITH([mysql-includes],
     [AS_HELP_STRING([--with-mysql-includes@<:@=DIR@:>@],
                     [MySQL includes base directory])],
-    [if test ! -d "${with_mysql_includes}"; then AC_MSG_ERROR(directory ${with_mysql_includes} does not exist for --with-mysql-includes); unset with_mysql_includes; fi])
+    [if test ! -d "${with_mysql_includes}"; then AC_MSG_ERROR(directory ${with_mysql_includes} does not exist for --with-mysql-includes); unset with_mysql_includes; fi],
+    [with_mysql_includes="$MYSQL_INCLUDES"])
 
 check_mysql_includes() {
    if test "$with_mysql_includes" != "/usr/include"; then
@@ -377,11 +379,11 @@ check_mysql() {
     else
        mid=`ls -rdt $a/include/mysql* 2>/dev/null | tail -1`
        if test -n "$mid" -a -f "$mid/mysql/mysql.h"; then
-	  with_mysql_includes="$mid/mysql"
+          with_mysql_includes="$mid/mysql"
        elif test -n "$mid" -a -f "$mid/mariadb/mysql/mysql.h"; then
-	  with_mysql_includes="$mid/mariadb/mysql"
+          with_mysql_includes="$mid/mariadb/mysql"
        elif test -n "$mid" -a -f "$mid/percona/mysql/mysql.h"; then
-	  with_mysql_includes="$mid/percona/mysql"
+          with_mysql_includes="$mid/percona/mysql"
        fi
     fi
 
@@ -391,19 +393,19 @@ check_mysql() {
 
     lib="$a/lib${LIBSUFFIX}"
 
-    if test -f "$lib/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+    if test -e "$lib/libmysqlclient_r.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib
        mysql_libname=mysqlclient_r
-    elif test -f "$lib/libmariadbclient_r.${SHLIB_SUFFIX}"; then
+    elif test -e "$lib/libmariadbclient_r.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib
        mysql_libname=mariadbclient_r
-    elif test -f "$lib/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+    elif test -e "$lib/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib/mysql
        mysql_libname=mysqlclient_r
-    elif test -f "$lib/mariadb/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+    elif test -e "$lib/mariadb/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib/mariadb/mysql
        mysql_libname=mysqlclient_r
-    elif test -f "$lib/percona/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+    elif test -e "$lib/percona/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib/percona/mysql
        mysql_libname=mysqlclient_r
     elif test -f "$lib/libmysqlclient_r.a"; then
@@ -422,26 +424,26 @@ check_mysql() {
        with_mysql_libs=$lib
        mysql_libname=mysql
        mysql_winlib=1
-    elif test -f "$lib/libmariadb.${SHLIB_SUFFIX}"; then
+    elif test -e "$lib/libmariadb.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib
        mysql_libname=mariadb
     else
        mld=`ls -rdt $a/lib/mysql* 2>/dev/null | tail -1`
        if test -n "$mld"; then
-          if test -f "$mld/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
-	     with_mysql_libs="$mld/mysql"
- 	     mysql_libname=mysqlclient_r
-          elif test -f "$mld/mariadb/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
-	     with_mysql_libs="$mld/mariadb/mysql"
- 	     mysql_libname=mysqlclient_r
-          elif test -f "$mld/percona/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
-	     with_mysql_libs="$mld/percona/mysql"
- 	     mysql_libname=mysqlclient_r
-	  elif test -f "$mld/mysql/libmysqlclient_r.a"; then
-	     with_mysql_libs="$mld/mysql"
- 	     mysql_libname=mysqlclient_r
-	     mysql_static=1
-	  fi
+          if test -e "$mld/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+             with_mysql_libs="$mld/mysql"
+             mysql_libname=mysqlclient_r
+          elif test -e "$mld/mariadb/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+             with_mysql_libs="$mld/mariadb/mysql"
+             mysql_libname=mysqlclient_r
+          elif test -e "$mld/percona/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+             with_mysql_libs="$mld/percona/mysql"
+             mysql_libname=mysqlclient_r
+          elif test -f "$mld/mysql/libmysqlclient_r.a"; then
+             with_mysql_libs="$mld/mysql"
+             mysql_libname=mysqlclient_r
+             mysql_static=1
+          fi
        fi
     fi
 
@@ -459,15 +461,15 @@ if test "${with_mysql}" != "no"; then
    if test -n "${with_mysql_includes}"; then
       if test ! -f "${with_mysql_includes}/mysql.h"; then
          if test -f "${with_mysql_includes}/mysql/mysql.h"; then
-	    with_mysql_includes="${with_mysql_includes}/mysql"
+            with_mysql_includes="${with_mysql_includes}/mysql"
             check_mysql_includes
          else
             AC_MSG_ERROR([mysql.h not found in $with_mysql_includes])
          fi
       fi
       if test -n "${with_mysql_libs}"; then
-         if test ! -f "${with_mysql_libs}/libmysqlclient_r.${SHLIB_SUFFIX}"; then
-	    if test ! -f "${with_mysql_libs}/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+         if test ! -e "${with_mysql_libs}/libmysqlclient_r.${SHLIB_SUFFIX}"; then
+            if test -e "${with_mysql_libs}/mysql/libmysqlclient_r.${SHLIB_SUFFIX}"; then
                with_mysql_libs="${with_mysql_libs}/mysql"
             else
                if test -f "${with_mysql_libs}/libmysqlclient_r.a"; then
@@ -475,7 +477,7 @@ if test "${with_mysql}" != "no"; then
                elif test -f "${with_mysql_libs}/mysql/libmysqlclient_r.a"; then
                   with_mysql_libs="${with_mysql_libs}/mysql"
                   mysql_static=1
-      	       else
+               else
                   AC_MSG_ERROR([mysql client library not found in $with_mysql_libs])
                fi
             fi
@@ -489,13 +491,13 @@ if test "${with_mysql}" != "no"; then
       if test -n "$with_mysql"; then
          check_mysql "$with_mysql"
          if test -z "$with_mysql_includes"; then
-	    AC_MSG_ERROR([not found in $with_mysql])
+            AC_MSG_ERROR([not found in $with_mysql])
          fi
       else
          for dir in $MYSQL_DIR "${with_lib_prefix}" "${find_prefix}" / /usr /usr/local /usr/local/mysql /opt/mysql /usr/mysql /sw /opt/local /opt/sfw /usr/sfw; do
             check_mysql $dir
             if test -n "$with_mysql_includes"; then
-	       break;
+               break;
             fi
          done
       fi
@@ -503,11 +505,11 @@ if test "${with_mysql}" != "no"; then
 
    if test -n "$with_mysql_includes"; then
       if test -n "$mysql_static"; then
-	 AC_MSG_RESULT([includes=$with_mysql_includes, libs=$with_mysql_libs (static)])
+         AC_MSG_RESULT([includes=$with_mysql_includes, libs=$with_mysql_libs (static)])
       elif test -n "$mysql_winlib"; then
-	 AC_MSG_RESULT([includes=$with_mysql_includes, libs=$with_mysql_libs (windows lib)])
+         AC_MSG_RESULT([includes=$with_mysql_includes, libs=$with_mysql_libs (windows lib)])
       else
-	 AC_MSG_RESULT([includes=$with_mysql_includes, libs=$with_mysql_libs (shared)])
+         AC_MSG_RESULT([includes=$with_mysql_includes, libs=$with_mysql_libs (shared)])
       fi
       with_mysql=yes
    else
@@ -523,16 +525,19 @@ if test "${with_mysql}" = yes; then
      if test -n "$mysql_app_includes"; then
           MYSQL_INCLUDES="-I$with_mysql_includes"
      fi
+     if test -z "$mysql_libname"; then
+         mysql_libname=mysqlclient_r
+     fi
      if test -n "$mysql_static"; then
           MYSQL_LIBS="$with_mysql_libs/lib${mysql_libname}.a"
      elif test -n "$mysql_winlib"; then
           MYSQL_LIBS="-L$with_mysql_libs -l${mysql_libname}"
      else
         if test -n "$mysql_app_libs"; then
- 	   MYSQL_LIBS="-L$with_mysql_libs -l${mysql_libname}"
-	else
-	   MYSQL_LIBS="-l${mysql_libname}"
-	fi
+           MYSQL_LIBS="-L$with_mysql_libs -l${mysql_libname}"
+        else
+           MYSQL_LIBS="-l${mysql_libname}"
+        fi
      fi
      # check if C++ compiler can link with MYSQL libs
      SAVE_CXXFLAGS="$CXXFLAGS"
@@ -544,9 +549,9 @@ if test "${with_mysql}" = yes; then
 #include <winsock.h>
 #endif
 #include <mysql.h>
-	 ]],[[
+         ]],[[
 MYSQL mysql; mysql_init(&mysql);
-	]])], mysql_links=yes, mysql_links=no)
+        ]])], mysql_links=yes, mysql_links=no)
 
      CXXFLAGS="$SAVE_CXXFLAGS"
      LDFLAGS="$SAVE_LDFLAGS"
@@ -555,23 +560,23 @@ MYSQL mysql; mysql_init(&mysql);
         AC_MSG_ERROR([could not compile a test MySQL program])
      else
         AC_SUBST(MYSQL_INCLUDES)
-	AC_SUBST(MYSQL_LIBS)
-	# check for mysql_stmt_prepare
-	if test -n "`grep mysql_stmt_prepare ${with_mysql_includes}/*.h`"; then
-	   AC_DEFINE(HAVE_MYSQL_STMT, 1, Define if mysql_stmt_* functions are available)
-	fi
-	# check for mysql_commit
-	if test -n "`grep mysql_commit ${with_mysql_includes}/*.h`"; then
-	   AC_DEFINE(HAVE_MYSQL_COMMIT, 1, [Define if mysql_commit() and mysql_rollback() functions are available])
-	fi
-	# check for mysql_set_character_set
-	if test -n "`grep mysql_set_character_set ${with_mysql_includes}/*.h`"; then
-	   AC_DEFINE(HAVE_MYSQL_SET_CHARACTER_SET, 1, [Define if mysql_set_character_set() is available])
-	fi
-	# check for mysql_library_init
-	if test -n "`grep mysql_library_init ${with_mysql_includes}/*.h`"; then
-	   AC_DEFINE(HAVE_MYSQL_LIBRARY_INIT, 1, Define if mysql_library_init and mysql_library_end functions are available)
-	fi
+        AC_SUBST(MYSQL_LIBS)
+        # check for mysql_stmt_prepare
+        if test -n "`grep mysql_stmt_prepare ${with_mysql_includes}/*.h`"; then
+           AC_DEFINE(HAVE_MYSQL_STMT, 1, Define if mysql_stmt_* functions are available)
+        fi
+        # check for mysql_commit
+        if test -n "`grep mysql_commit ${with_mysql_includes}/*.h`"; then
+           AC_DEFINE(HAVE_MYSQL_COMMIT, 1, [Define if mysql_commit() and mysql_rollback() functions are available])
+        fi
+        # check for mysql_set_character_set
+        if test -n "`grep mysql_set_character_set ${with_mysql_includes}/*.h`"; then
+           AC_DEFINE(HAVE_MYSQL_SET_CHARACTER_SET, 1, [Define if mysql_set_character_set() is available])
+        fi
+        # check for mysql_library_init
+        if test -n "`grep mysql_library_init ${with_mysql_includes}/*.h`"; then
+           AC_DEFINE(HAVE_MYSQL_LIBRARY_INIT, 1, Define if mysql_library_init and mysql_library_end functions are available)
+        fi
         with_mysql=yes
      fi
   else
@@ -602,7 +607,7 @@ find_qore() {
             AC_MSG_RESULT([$lib (forced static)])
         fi
     else
-        if test -f "$lib/libqore.${SHLIB_SUFFIX}"; then
+        if test -e "$lib/libqore.${SHLIB_SUFFIX}"; then
             if test "$lib" != "/lib" -a "$lib" != "/usr/lib"; then
                 QORE_LDFLAGS="-L$lib"
             fi
@@ -722,7 +727,7 @@ fi
 
 AC_ARG_ENABLE([profile],
      [AS_HELP_STRING([--enable-profile],
-		     [turn on profiling support (default=no)])],
+                     [turn on profiling support (default=no)])],
      [case "${enable_profile}" in
        yes|no) ;;
        *)      AC_MSG_ERROR(bad value ${enable_profile} for --enable-profile) ;;
@@ -731,7 +736,7 @@ AC_ARG_ENABLE([profile],
 
 AC_ARG_ENABLE([debug],
      [AS_HELP_STRING([--enable-debug],
-		     [turn on debugging (default=no)])],
+                     [turn on debugging (default=no)])],
      [case "${enable_debug}" in
        yes|no) ;;
        *)      AC_MSG_ERROR(bad value ${enable_debug} for --enable-debug) ;;
@@ -752,7 +757,7 @@ fi
 
 AC_ARG_ENABLE([optimization],
      [AS_HELP_STRING([--enable-optimization],
-		     [turn on optimization (default=auto (yes unless debugging is enabled)])],
+                     [turn on optimization (default=auto (yes unless debugging is enabled)])],
      [case "${enable_optimization}" in
        yes|no) ;;
        *)      AC_MSG_ERROR(bad value ${enable_optimization} for --enable-optimization) ;;
@@ -803,10 +808,10 @@ if test "$enable_optimization" = "yes"; then
         CXXFLAGS="$CXXFLAGS -O3"  # gcc
     elif test "$CXX" = "CC" -a "`echo $host_os|cut -b-7`" = "solaris"; then
         # remove -g with Solaris CC as it reduces optimization levels
-	CXXFLAGS="`echo $CXXFLAGS| sed s/-g//` -xO5" # Solaris CC
+        CXXFLAGS="`echo $CXXFLAGS| sed s/-g//` -xO5" # Solaris CC
     elif test -n "`echo $CXX|grep aCC`"; then 
         # remove -g with HP-UX aCC as it reduces optimization levels
-	CXXFLAGS="`echo $CXXFLAGS| sed s/-g//` +O4" # HP-UX aCC
+        CXXFLAGS="`echo $CXXFLAGS| sed s/-g//` +O4" # HP-UX aCC
     fi
 else
     if test "$GXX" = "yes"; then
