@@ -7,6 +7,9 @@ Version 2.0.2
 * placeholders and quotes in SQL comments are ignored
 * tag module with LGPL license if compiled with MariaDB
 * added license string info for use with Qore >= 0.8.10
+* fixed time column retrieval; the date component is now set to 1970-01-01
+* fixed binary and varbinary column handling
+
 
 -------------
 Version 2.0.1
@@ -124,7 +127,7 @@ Qore 0.5.2
 ----------
 
 *) The "mysql" module now supports directly binding data and retrieving values
-   from queries in the qore DBI syntax (already supported by the "oracle" 
+   from queries in the qore DBI syntax (already supported by the "oracle"
    module)
 *) also the select() and selectRows() DBI methods support value binding as well
    for example, using the test database as given in examples/mysql-test-db.sql
@@ -155,6 +158,6 @@ Qore 0.5.0
 Qore 0.4.0
 ----------
 
-*) mysql driver substantially updated  
+*) mysql driver substantially updated
    It now supports threading, proper character set handling, transactions, and
    uses the more efficient prepared statement interface.
