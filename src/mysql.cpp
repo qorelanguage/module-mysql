@@ -404,15 +404,31 @@ AbstractQoreNode* MyResult::getBoundColumnValue(int i, bool destructive) {
          switch (conn->getNumeric()) {
             case OPT_NUM_OPTIMAL: {
                size_t len = strlen(p);
-               bool sign = p[0] == '-';
-               if (sign)
-                  --len;
-               if (!strchr(p, '.')
-                   && (len < 19
-                       || (len == 19 &&
-                           ((!sign && strcmp(p, "9223372036854775807") <= 0)
-                            ||(sign && strcmp(p, "-9223372036854775808") >= 0)))))
-                  return new QoreBigIntNode(strtoll(p, 0, 10));
+               bool has_decimal = (bool)strchr(p, '.');
+               if (has_decimal) {
+                  char* c = (char*)p;
+                  // trim off trailing zeros
+                  while (len && c[len - 1] == '0') {
+                     --len;
+                     c[len] = '\0';
+                  }
+                  if (c[len - 1] == '.') {
+                     --len;
+                     c[len] = '\0';
+                     has_decimal = false;
+                  }
+               }
+               if (!has_decimal) {
+                  bool sign = p[0] == '-';
+                  if (sign)
+                     --len;
+                  if (!strchr(p, '.')
+                      && (len < 19
+                          || (len == 19 &&
+                              ((!sign && strcmp(p, "9223372036854775807") <= 0)
+                               ||(sign && strcmp(p, "-9223372036854775808") >= 0)))))
+                     return new QoreBigIntNode(strtoll(p, 0, 10));
+               }
 #ifdef _QORE_HAS_NUMBER_TYPE
                return new QoreNumberNode(p);
 #else
