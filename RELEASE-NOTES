@@ -9,6 +9,8 @@ Version 2.0.2
 * added license string info for use with Qore >= 0.8.10
 * fixed time column retrieval; the date component is now set to 1970-01-01
 * fixed binary and varbinary column handling
+* fixed the "optimal-numbers" option with decimal values with decimal points
+  (https://github.com/qorelanguage/qore/issues/542)
 
 
 -------------
