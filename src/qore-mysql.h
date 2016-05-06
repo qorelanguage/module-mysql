@@ -38,11 +38,6 @@
 #ifdef HAVE_MYSQL_STMT
 class QoreMysqlConnection;
 
-static inline void get_lower_case_name(QoreString* str, const QoreEncoding* enc, const char *name) {
-   str->set(name, enc);
-   str->tolwr();
-}
-
 class MyResult {
 private:
    MYSQL_FIELD *field;
@@ -128,28 +123,10 @@ public:
       return num_fields;
    }
 
-   DLLLOCAL QoreHashNode* getSingleRow(ExceptionSink* xsink) {
-      QoreHashNode* h = new QoreHashNode;
-
-      for (int i = 0; i < num_fields; i++) {
-         QoreString tstr(field[i].name, enc);
-         tstr.tolwr();
-         h->setKeyValue(&tstr, getBoundColumnValue(i), xsink);
-      }
-      return h;
-   }
+   DLLLOCAL QoreHashNode* getSingleRow(ExceptionSink* xsink);
 
    // returns a hash of empty lists keyed by column name
-   DLLLOCAL QoreHashNode* setupColumns() {
-      QoreHashNode* h = new QoreHashNode;
-      QoreString tstr;
-      for (int i = 0; i < num_fields; i++) {
-	 get_lower_case_name(&tstr, enc, field[i].name);
-	 h->setKeyValue(&tstr, new QoreListNode, 0);
-      }
-
-      return h;
-   }
+   DLLLOCAL QoreHashNode* setupColumns();
 };
 
 // FIXME: do not assume byte widths
