@@ -41,6 +41,11 @@
 
 #include <mysqld_error.h>
 
+#include <vector>
+#include <string>
+
+typedef std::vector<std::string> strvec_t;
+
 DLLEXPORT char qore_module_name[] = "mysql";
 DLLEXPORT char qore_module_version[] = PACKAGE_VERSION;
 #if defined(MARIADB_BASE_VERSION)
@@ -184,6 +189,32 @@ void my_val::assign(const QoreMysqlConnection& conn, const DateTime &d) {
    time.neg = false;
 }
 
+static void assign_column_value(QoreString& str, const QoreEncoding* enc, const char *name, QoreHashNode& h, AbstractQoreNode* v, strvec_t* strvec = 0) {
+   str.set(name, enc);
+   str.tolwr();
+
+   HashAssignmentHelper hah(h, str.c_str());
+   if (*hah) {
+      // find a unique column name
+      unsigned num = 1;
+      while (true) {
+         QoreStringMaker tmp("%s_%d", str.c_str(), num);
+         hah.reassign(tmp.c_str());
+         if (*hah) {
+            ++num;
+            continue;
+         }
+         if (strvec)
+            strvec->push_back(tmp.c_str());
+         break;
+      }
+   }
+   else if (strvec)
+      strvec->push_back(name);
+
+   hah.assign(v, 0);
+}
+
 static void check_init() {
    if (!pthread_getspecific(ptk_mysql)) {
       mysql_thread_init();
@@ -311,6 +342,26 @@ static int qore_mysql_rollback(Datasource* ds, ExceptionSink* xsink) {
 }
 
 #ifdef HAVE_MYSQL_STMT
+QoreHashNode* MyResult::getSingleRow(ExceptionSink* xsink) {
+   QoreHashNode* h = new QoreHashNode;
+
+   QoreString tstr;
+   for (int i = 0; i < num_fields; i++)
+      assign_column_value(tstr, enc, field[i].name, *h, getBoundColumnValue(i));
+
+   return h;
+}
+
+// returns a hash of empty lists keyed by column name
+QoreHashNode* MyResult::setupColumns() {
+   QoreHashNode* h = new QoreHashNode;
+   QoreString tstr;
+   for (int i = 0; i < num_fields; i++)
+      assign_column_value(tstr, enc, field[i].name, *h, new QoreListNode);
+
+   return h;
+}
+
 void MyResult::bind(MYSQL_STMT *stmt) {
    if (bindbuf)
       return;
@@ -787,7 +838,22 @@ QoreHashNode* QoreMysqlBindGroup::getOutputHash(ExceptionSink* xsink) {
          }
       }
 
-      h->setKeyValue(*sli, v, xsink);
+      HashAssignmentHelper hah(**h, *sli);
+      if (*hah) {
+         // find a unique column name
+         unsigned num = 1;
+         while (true) {
+            QoreStringMaker tmp("%s_%d", *sli, num);
+            hah.reassign(tmp.c_str());
+            if (*hah) {
+               ++num;
+               continue;
+            }
+            break;
+         }
+      }
+
+      hah.assign(v, xsink);
       sli++;
    }
    return h.release();
@@ -894,10 +960,8 @@ QoreHashNode* QoreMysqlBindGroup::selectRow(ExceptionSink* xsink) {
       if (!mysql_stmt_fetch(stmt)) {
          ReferenceHolder<QoreHashNode> h(new QoreHashNode, xsink);
 
-         for (int i = 0; i < myres.getNumFields(); i++) {
-            get_lower_case_name(&tstr, enc, myres.getFieldName(i));
-            h->setKeyValue(&tstr, myres.getBoundColumnValue(i, true), xsink);
-         }
+         for (int i = 0; i < myres.getNumFields(); i++)
+            assign_column_value(tstr, enc, myres.getFieldName(i), **h, myres.getBoundColumnValue(i, true));
 
          // see if there is a second row
          if (!mysql_stmt_fetch(stmt)) {
@@ -1365,12 +1429,14 @@ static QoreHashNode* get_result_set(const QoreMysqlConnection& conn, MYSQL_RES *
    // get column names and set up column lists
    MYSQL_FIELD *field = mysql_fetch_fields(res);
 
+   // get list of unique column names
+   strvec_t cvec;
+   cvec.reserve(num_fields);
+
    QoreString tstr;
    if (!single_row) {
-      for (int i = 0; i < num_fields; i++) {
-         get_lower_case_name(&tstr, conn.ds.getQoreEncoding(), field[i].name);
-         h->setKeyValue(&tstr, new QoreListNode, xsink);
-      }
+      for (int i = 0; i < num_fields; i++)
+         assign_column_value(tstr, conn.ds.getQoreEncoding(), field[i].name, **h, new QoreListNode, &cvec);
    }
 
    int rn = 0;
@@ -1388,14 +1454,10 @@ static QoreHashNode* get_result_set(const QoreMysqlConnection& conn, MYSQL_RES *
       for (int i = 0; i < num_fields; i++) {
          AbstractQoreNode* n = mysql_to_qore(field[i], row[i], lengths[i], conn);
          //printd(5, "get_result_set() row %d col %d: %s (type=%d)=\"%s\"\n", rn, i, field[i].name, field[i].type, row[i]);
-         if (single_row) {
-            get_lower_case_name(&tstr, conn.ds.getQoreEncoding(), field[i].name);
-            h->setKeyValue(&tstr, n, xsink);
-         }
-         else {
-            QoreListNode* l = reinterpret_cast<QoreListNode*>(h->getKeyValue(field[i].name));
-            l->push(n);
-         }
+         if (single_row)
+            assign_column_value(tstr, conn.ds.getQoreEncoding(), field[i].name, **h, n);
+         else
+            reinterpret_cast<QoreListNode*>(h->getKeyValue(cvec[i].c_str()))->push(n);
       }
    }
 
@@ -1422,10 +1484,9 @@ static QoreListNode* get_result_set_horiz(const QoreMysqlConnection& conn, MYSQL
       rn++;
       ReferenceHolder<QoreHashNode> h(new QoreHashNode, xsink);
 
-      for (int i = 0; i < num_fields; i++) {
-         get_lower_case_name(&tstr, conn.ds.getQoreEncoding(), field[i].name);
-         h->setKeyValue(&tstr, mysql_to_qore(field[i], row[i], lengths[i], conn), xsink);
-      }
+      for (int i = 0; i < num_fields; i++)
+         assign_column_value(tstr, conn.ds.getQoreEncoding(), field[i].name, **h, mysql_to_qore(field[i], row[i], lengths[i], conn));
+
       // add row to output
       l->push(h.release());
    }
