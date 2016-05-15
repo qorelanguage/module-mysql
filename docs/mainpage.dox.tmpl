@@ -9,7 +9,7 @@
     - @ref mysqlbind
     - @ref mysqlstoredprocs
     - @ref mysqlreleasenotes
-    
+
     @section mysqlintro Introduction to the mysql Module
 
     The mysql module provides a <a href="www.mysql.com">MySQL</a> driver to Qore's DBI system, allowing Qore programs to access MySQL databases through the Datasource, DatasourcePool, and SQLStatement classes.
@@ -18,7 +18,7 @@
 
     Example of creating a MySQL Datasource:
     @code
-my Datasource $db(SQL::DSMySQL, $user, $pass, $db, $charset, $hostname, $port);
+Datasource db(SQL::DSMySQL, user, pass, db, encoding, hostname, port);
     @endcode
 
     This driver supports the following DBI capabilities when compiled against MySQL 5 or better:
@@ -40,7 +40,7 @@ my Datasource $db(SQL::DSMySQL, $user, $pass, $db, $charset, $hostname, $port);
 
     As with all Qore DBI drivers, column names are manually converted to lower case if necessary before being returned to the user.
 
-    The <tt>Datasource::getServerVersion()</tt> and <tt>Datasource::getClientVersion()</tt> methods are implemented for this driver and return an integer giving the major, minor, and sub version numbers in a single integer according to the following formula: 
+    The <tt>Datasource::getServerVersion()</tt> and <tt>Datasource::getClientVersion()</tt> methods are implemented for this driver and return an integer giving the major, minor, and sub version numbers in a single integer according to the following formula:
 
     @verbatim
 major_version * 10000 + minor_version * 100 + sub_version
@@ -60,8 +60,8 @@ major_version * 10000 + minor_version * 100 + sub_version
 
     Options can be set in the \c Datasource or \c DatasourcePool constructors as in the following examples:
     @code
-    my Dataource $ds("mysql:user/pass@db{numeric-numbers,timezone=Europe/Vienna}");
-    my DataourcePool $dsp("mysql:user/pass@db%host.internal:3306{optimal-numbers}");
+    Datasource ds("mysql:user/pass@db{numeric-numbers,timezone=Europe/Vienna}");
+    DatasourcePool dsp("mysql:user/pass@db%host.internal:3306{optimal-numbers}");
     @endcode
 
     Options are stored separately for each connection.
@@ -89,7 +89,7 @@ major_version * 10000 + minor_version * 100 + sub_version
     Qore placeholder buffer specifications can still be used to retrieve output variables as follows however:
 
     @code
-my date $now = $db.selectRow("select current_timestamp into :time").time;
+date now = db.selectRow("select current_timestamp into :time").time;
     @endcode
 
     @subsection mysqltimezone Time Zone Support
@@ -151,8 +151,8 @@ end;
 
     Qore code to call this function:
     @code
-my hash $result = $db.exec("call get_family(%v, :name)", 1);
-printf("%N\n", $result);
+hash result = db.exec("call get_family(%v, :name)", 1);
+printf("%N\n", result);
     @endcode
 
     Resulting in:
@@ -167,6 +167,10 @@ hash: (1 member)
     - fixed formatting bugs in invalid value specification error messages
     - updated configure to find and compile with MariaDB and Percona includes and libs
     - placeholders and quotes in SQL comments are ignored
+    - fixed time column retrieval; the date component is now set to 1970-01-01
+    - fixed \c binary and \c varbinary column handling
+    - fixed the \c "optimal-numbers" option with decimal values with decimal points (<a href="https://github.com/qorelanguage/qore/issues/542">issue 542</a>)
+    - fixed returning result sets with duplicate column names (<a href="https://github.com/qorelanguage/qore/issues/832">issue 832</a>)
 
     @subsection mysql201 mysql Driver Version 2.0.1
 

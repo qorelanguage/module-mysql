@@ -4,7 +4,7 @@
 
   Qore Programming Language
 
-  Copyright (C) 2003 - 2012 David Nichols
+  Copyright (C) 2003 - 2016 David Nichols
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,7 @@
 
 #define _QORE_MYSQL_H
 
-#include "../config.h"
+#include <config.h>
 
 #include <qore/Qore.h>
 
@@ -37,11 +37,6 @@
 
 #ifdef HAVE_MYSQL_STMT
 class QoreMysqlConnection;
-
-static inline void get_lower_case_name(QoreString* str, const QoreEncoding* enc, const char *name) {
-   str->set(name, enc);
-   str->tolwr();
-}
 
 class MyResult {
 private:
@@ -128,28 +123,10 @@ public:
       return num_fields;
    }
 
-   DLLLOCAL QoreHashNode* getSingleRow(ExceptionSink* xsink) {
-      QoreHashNode* h = new QoreHashNode;
-
-      for (int i = 0; i < num_fields; i++) {
-         QoreString tstr(field[i].name, enc);
-         tstr.tolwr();
-         h->setKeyValue(&tstr, getBoundColumnValue(i), xsink);
-      }
-      return h;
-   }
+   DLLLOCAL QoreHashNode* getSingleRow(ExceptionSink* xsink);
 
    // returns a hash of empty lists keyed by column name
-   DLLLOCAL QoreHashNode* setupColumns() {
-      QoreHashNode* h = new QoreHashNode;
-      QoreString tstr;
-      for (int i = 0; i < num_fields; i++) {
-	 get_lower_case_name(&tstr, enc, field[i].name);
-	 h->setKeyValue(&tstr, new QoreListNode, 0);
-      }
-
-      return h;
-   }
+   DLLLOCAL QoreHashNode* setupColumns();
 };
 
 // FIXME: do not assume byte widths
@@ -213,7 +190,7 @@ public:
       data.value = v ? v->refSelf() : 0;
       return 0;
    }
-     
+
    DLLLOCAL int bindValue(const QoreMysqlConnection& conn, MYSQL_BIND *buf, ExceptionSink* xsink);
 };
 
@@ -248,8 +225,8 @@ public:
 #endif
    int numeric_support;
 
-   DLLLOCAL QoreMysqlConnection(MYSQL* d, Datasource& n_ds) 
-      : db(d), ds(n_ds), 
+   DLLLOCAL QoreMysqlConnection(MYSQL* d, Datasource& n_ds)
+      : db(d), ds(n_ds),
 #ifdef _QORE_HAS_FIND_CREATE_TIMEZONE
         server_tz(currentTZ()),
 #endif
@@ -260,7 +237,7 @@ public:
       mysql_close(db);
    }
 
-   DLLLOCAL int reconnect(Datasource *ds, MYSQL_STMT *&stmt, const QoreString& str, ExceptionSink* xsink) {	 
+   DLLLOCAL int reconnect(Datasource *ds, MYSQL_STMT *&stmt, const QoreString& str, ExceptionSink* xsink) {
       // throw an exception if a transaction is in progress
       if (wasInTransaction(ds))
 	 xsink->raiseException("DBI:MYSQL:CONNECTION-ERROR", "connection to MySQL database server lost while in a transaction; transaction has been lost");
@@ -283,11 +260,11 @@ public:
       stmt = stmt_init(xsink);
       if (!stmt)
 	 return -1;
-	 
+
       // prepare the statement for execution (again)
       if (mysql_stmt_prepare(stmt, str.getBuffer(), str.strlen()))
 	 return -1;
-	 
+
       return 0;
    }
 
@@ -364,8 +341,8 @@ public:
       return 0;
    }
 
-   DLLLOCAL int getNumeric() const { 
-      return numeric_support; 
+   DLLLOCAL int getNumeric() const {
+      return numeric_support;
    }
 
 #ifdef _QORE_HAS_TIME_ZONES
@@ -411,7 +388,7 @@ protected:
    }
 
    DLLLOCAL int execIntern(ExceptionSink* xsink);
-   
+
    DLLLOCAL int getDataRows(QoreListNode& l, ExceptionSink* xsink, int max = -1);
    DLLLOCAL int getDataColumns(QoreHashNode& h, ExceptionSink* xsink, int max = -1);
 
@@ -423,8 +400,8 @@ protected:
    }
 
 public:
-   DLLLOCAL QoreMysqlBindGroup(Datasource *ods) 
-   : head(0), tail(0), str(0), stmt(0), hasOutput(false), bind(0), 
+   DLLLOCAL QoreMysqlBindGroup(Datasource *ods)
+   : head(0), tail(0), str(0), stmt(0), hasOutput(false), bind(0),
      ds(ods), mydata((QoreMysqlConnection *)ds->getPrivateData()), len(0),
      myres(mydata, ds->getQoreEncoding()) {
    }
