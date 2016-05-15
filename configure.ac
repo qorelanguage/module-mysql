@@ -56,26 +56,24 @@ SHLIB_SUFFIX=so
 #echo host_os=${host_os}sss
 case "${host_os}" in
      *linux*)   # set compile flags for Linux
-                CPPFLAGS="${CPPFLAGS} -D_GNU_SOURCE"
-                SHLIB_SUFFIX=so
-                AC_DEFINE(LINUX, 1, if compiling on Linux)
-                ;;
-     *solaris*) # set compile flags for Solaris
-                CPPFLAGS="${CPPFLAGS} -D_POSIX_C_SOURCE=199506L -D_XPG4_2 -D_XPG5 -D__EXTENSIONS__"
-                # for checking for some network functions on Solaris
-                LDFLAGS="$LDFLAGS -lnsl"
-                # assume we are using CC if not using g++, add -norunpath to link flags in this case
-                if test "$GXX" != "yes"; then
-                   CXXFLAGS="${CXXFLAGS} -mt"
-                   LDFLAGS="$LDFLAGS -norunpath -mt"
-                fi
-                AC_DEFINE(SOLARIS, 1, if compiling on Solaris)
-                # add -ldl to libs if on Solaris 8
-                if test "${host_os}" = "solaris2.8"; then
-                   OTHER_LIBS="$OTHER_LIBS -ldl"
-                fi
-                solaris=yes
-                ;;
+		CPPFLAGS="${CPPFLAGS} -D_GNU_SOURCE"
+		SHLIB_SUFFIX=so
+		AC_DEFINE(LINUX, 1, if compiling on Linux)
+		;;
+     *solaris*) # for checking for some network functions on Solaris
+		LDFLAGS="$LDFLAGS -lnsl"
+		# assume we are using CC if not using g++, add -norunpath to link flags in this case
+		if test "$GXX" != "yes"; then
+		   CXXFLAGS="${CXXFLAGS} -mt"
+		   LDFLAGS="$LDFLAGS -norunpath -mt"
+		fi
+		AC_DEFINE(SOLARIS, 1, if compiling on Solaris)
+		# add -ldl to libs if on Solaris 8
+		if test "${host_os}" = "solaris2.8"; then
+		   OTHER_LIBS="$OTHER_LIBS -ldl"
+		fi
+		solaris=yes
+	        ;;
      *darwin*)  SHLIB_SUFFIX=dylib
                 # libtool 1.5.* is creating modules on Darwin 8.* (OS/X 10.4.*) with a .so suffix for some reason
                 MODULE_SUFFIX=so
@@ -145,10 +143,10 @@ if test "$enable_64bit" = "auto"; then
    # turn on 64-bit by default if compiling on a 64-bit platform
    case "${host_cpu}" in
        *64*)
-                 enable_64bit=yes 
+                 enable_64bit=yes
                  ;;
        s390x)
-                 enable_64bit=yes 
+                 enable_64bit=yes
                  ;;
        *)        case "${host_os}" in
                      darwin*)   mv=`uname -r|cut -f1 -d.`
@@ -265,15 +263,11 @@ else
                 fi
                 ;;
      *solaris*) if test "$GXX" = "yes"; then
-                    if test "$host_cpu" = "sparc"; then
-                        CXXFLAGS="$CXXFLAGS -mcpu=v8 -m32"
-                    else
-                        CXXFLAGS="$CXXFLAGS -m32"
-                    fi
-                else
-                    CXXFLAGS="$CXXFLAGS -xarch=generic"
-                fi
-                ;;
+		    CXXFLAGS="$CXXFLAGS -m32"
+		else
+		    CXXFLAGS="$CXXFLAGS -xarch=generic"
+		fi
+		;;
    esac
    if test "$host_cpu" = "x86_64"; then
       cpu_family=i386
@@ -484,7 +478,7 @@ if test "${with_mysql}" != "no"; then
          fi
       else
          AC_MSG_ERROR([--with-mysql-libs must also be used when --with-mysql-incudes is used])
-      fi 
+      fi
    elif test -n "${with_mysql_libs}"; then
       AC_MSG_ERROR([--with-mysql-includes must also be used when --with-mysql-libs is used])
    else
@@ -808,8 +802,8 @@ if test "$enable_optimization" = "yes"; then
         CXXFLAGS="$CXXFLAGS -O3"  # gcc
     elif test "$CXX" = "CC" -a "`echo $host_os|cut -b-7`" = "solaris"; then
         # remove -g with Solaris CC as it reduces optimization levels
-        CXXFLAGS="`echo $CXXFLAGS| sed s/-g//` -xO5" # Solaris CC
-    elif test -n "`echo $CXX|grep aCC`"; then 
+	CXXFLAGS="`echo $CXXFLAGS| sed s/-g//` -xO5" # Solaris CC
+    elif test -n "`echo $CXX|grep aCC`"; then
         # remove -g with HP-UX aCC as it reduces optimization levels
         CXXFLAGS="`echo $CXXFLAGS| sed s/-g//` +O4" # HP-UX aCC
     fi
