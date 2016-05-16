@@ -36,8 +36,10 @@ See COPYING.LGPL and COPYING.GPL for details on the open-source licenses.
 BUILD AND INSTALL
 -----------------
 
-If your mysql installation is in a non-standard location, set the MYSQL_DIR environment variable to the location of the installation before running configure.
-Note that you have to use g++ 4.0.* on Darwin to link with newer versions of the MySQL libraries
+If your mysql/mariadb installation is in a non-standard location, set one of the following environment variables before running configure:
+* MYSQL_DIR: the main mysql/mariadb directory (include and lib subdirs must be present)
+* MYSQL_INCLUDES: the directory containing the mysql/mariadb header files
+* MYSQL_LIBS: the directory containing the mysql/mariadb libraries
 
 configure
 make
@@ -45,7 +47,7 @@ sudo make install
 
 The configure script will find out where your qore module directory is found and set this for the install directory.
 
-BUILD FROM SVN
+BUILD FROM GIT
 --------------
 
 reconf.sh
