@@ -46,7 +46,11 @@
 
 typedef std::vector<std::string> strvec_t;
 
+#ifdef USE_EMBED_MYSQL
+DLLEXPORT char qore_module_name[] = "mysqld";
+#else
 DLLEXPORT char qore_module_name[] = "mysql";
+#endif
 DLLEXPORT char qore_module_version[] = PACKAGE_VERSION;
 #if defined(MARIADB_BASE_VERSION)
 DLLEXPORT char qore_module_description[] = "Mariadb/MySQL database driver";
@@ -1740,7 +1744,11 @@ QoreStringNode* qore_mysql_module_init() {
 #endif
 
    // register database functions with DBI subsystem
+#ifdef USE_EMBED_MYSQL
+   DBID_MYSQL = DBI.registerDriver("mysqld", methods, mysql_caps);
+#else
    DBID_MYSQL = DBI.registerDriver("mysql", methods, mysql_caps);
+#endif
 
    return 0;
 }

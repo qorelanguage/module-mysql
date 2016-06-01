@@ -53,11 +53,20 @@ include_directories(${MySQL_INCLUDE_DIR})
 set(CPP_SRC src/mysql.cpp)
 
 set(module_name "mysql")
-
 add_library(${module_name} SHARED ${CPP_SRC})
-
 qore_binary_module(${module_name} ${PROJECT_VERSION} ${MySQL_LIBS_R} Threads::Threads)
 
 qore_dist(${PROJECT_VERSION})
 
 qore_config_info()
+
+if (MySQL_LIBS_D)
+    message(STATUS "Build for embedded module enabled")
+    set(module_embed_name "mysqld")
+    add_library(${module_embed_name} SHARED ${CPP_SRC})
+    target_compile_definitions(${module_embed_name} PRIVATE -DUSE_EMBED_MYSQL)
+    qore_binary_module(${module_embed_name} ${PROJECT_VERSION} ${MySQL_LIBS_D} Threads::Threads)
+else ()
+    message(WARNING "Build for embedded module disabled, no embedding library found")
+endif ()
+
