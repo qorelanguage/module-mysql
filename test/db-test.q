@@ -42,6 +42,8 @@ const object_map =
    ( "tables" : ora_tables ),
    "mysql"  : 
    ( "tables" : mysql_tables ),
+   "mysqld" :
+   ( "tables" : mysql_tables ),
    "pgsql"  : 
    ( "tables" : pgsql_tables ),
    "sybase" : 
@@ -349,7 +351,6 @@ sub create_datamodel($db)
 	    $tables = mssql_sybase_tables;
         else
 	    $tables = mssql_mssql_tables;
-
     foreach my $table in (keys $tables)
     {
 	tprintf(2, "creating table %n\n", $table);

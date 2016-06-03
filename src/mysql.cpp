@@ -272,6 +272,18 @@ static MYSQL* qore_mysql_init(Datasource* ds, ExceptionSink* xsink) {
       xsink->outOfMemory();
       return 0;
    }
+
+#ifdef USE_EMBED_MYSQL
+    if (mysql_options(db, MYSQL_READ_DEFAULT_GROUP, "qore_embedded")) {
+        xsink->raiseException("DBI:MYSQL:EMBEDDED", "Error setting options for READ_DEFAULT_GROUP");
+        return 0;
+    }
+    if (mysql_options(db, MYSQL_OPT_USE_EMBEDDED_CONNECTION, NULL)) {
+        xsink->raiseException("DBI:MYSQL:ENBEDDED", "Error setting option to use embedded connection");
+        return 0;
+    }
+#endif
+
 #ifdef QORE_HAS_DATASOURCE_PORT
    int port = ds->getPort();
 #else
@@ -1688,10 +1700,22 @@ QoreStringNode* qore_mysql_module_init() {
    pthread_key_create(&ptk_mysql, NULL);
    tclist.push(mysql_thread_cleanup, NULL);
 
-#ifdef HAVE_MYSQL_LIBRARY_INIT
-   mysql_library_init(0, 0, 0);
+#ifdef USE_EMBED_MYSQL
+    static char * mysql_args[] = { "unused string",
+                                   "--datadir=.", // TODO/FIXME: configurable? env?
+                                   //"--skip-grant-tables",
+                                   //"--innodb=FORCE", // configurable?
+                                   // TODO/FIXME: my.conf file location? env?
+                                   //"--defaults-extra-file=file_name",
+                                   //"--skip-autocommit",
+                                 };
+    mysql_library_init(sizeof(mysql_args) / sizeof(char *), mysql_args, 0);
 #else
+#  ifdef HAVE_MYSQL_LIBRARY_INIT
+   mysql_library_init(0, 0, 0);
+#  else
    mysql_server_init(0, 0, 0);
+#  endif
 #endif
 
    // populate the method list structure with the method pointers
