@@ -418,6 +418,9 @@ check_mysql() {
        with_mysql_libs=$lib
        mysql_libname=mysql
        mysql_winlib=1
+    elif test -e "$lib/libmysqlclient.${SHLIB_SUFFIX}"; then
+       with_mysql_libs=$lib
+       mysql_libname=mysqlclient
     elif test -e "$lib/libmariadb.${SHLIB_SUFFIX}"; then
        with_mysql_libs=$lib
        mysql_libname=mariadb
