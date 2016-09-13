@@ -1,3 +1,10 @@
+---------------
+Version 2.0.2.1
+---------------
+
+updated SQLStatement::fetchColumns() to return an empty hash when no data is available (issue 1241)
+
+
 -------------
 Version 2.0.2
 -------------
