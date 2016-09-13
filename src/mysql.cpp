@@ -353,13 +353,10 @@ QoreHashNode* MyResult::getSingleRow(ExceptionSink* xsink) {
 }
 
 // returns a hash of empty lists keyed by column name
-QoreHashNode* MyResult::setupColumns() {
-   QoreHashNode* h = new QoreHashNode;
+void MyResult::setupColumns(QoreHashNode& h) {
    QoreString tstr;
    for (int i = 0; i < num_fields; i++)
-      assign_column_value(tstr, enc, field[i].name, *h, new QoreListNode);
-
-   return h;
+      assign_column_value(tstr, enc, field[i].name, h, new QoreListNode);
 }
 
 void MyResult::bind(MYSQL_STMT *stmt) {
@@ -886,11 +883,14 @@ int QoreMysqlBindGroup::getDataRows(QoreListNode& l, ExceptionSink* xsink, int m
 }
 
 int QoreMysqlBindGroup::getDataColumns(QoreHashNode& h, ExceptionSink* xsink, int max) {
-   assert(!h.empty());
+   assert(h.empty());
 
    // row count
    int c = 0;
    while ((max < 0 || c < max) && !mysql_stmt_fetch(stmt)) {
+      if (h.empty())
+         myres.setupColumns(h);
+
       HashIterator hi(h);
       int i = 0;
       while (hi.next()) {
@@ -908,7 +908,7 @@ AbstractQoreNode* QoreMysqlBindGroup::exec(ExceptionSink* xsink) {
       return 0;
 
    if (myres) {
-      ReferenceHolder<QoreHashNode> h(myres.setupColumns(), xsink);
+      ReferenceHolder<QoreHashNode> h(new QoreHashNode, xsink);
 
       if (!mysql_stmt_affected_rows(stmt))
          return h.release();
@@ -1117,7 +1117,7 @@ QoreListNode* QoreMysqlPreparedStatement::fetchRows(int rows, ExceptionSink *xsi
 }
 
 QoreHashNode* QoreMysqlPreparedStatement::fetchColumns(int rows, ExceptionSink *xsink) {
-   ReferenceHolder<QoreHashNode> h(myres.setupColumns(), xsink);
+   ReferenceHolder<QoreHashNode> h(new QoreHashNode, xsink);
    return !getDataColumns(**h, xsink) ? h.release() : 0;
 }
 

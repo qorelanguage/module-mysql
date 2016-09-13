@@ -126,7 +126,7 @@ public:
    DLLLOCAL QoreHashNode* getSingleRow(ExceptionSink* xsink);
 
    // returns a hash of empty lists keyed by column name
-   DLLLOCAL QoreHashNode* setupColumns();
+   DLLLOCAL void setupColumns(QoreHashNode& h);
 };
 
 // FIXME: do not assume byte widths
