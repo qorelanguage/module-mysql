@@ -390,7 +390,7 @@ protected:
    DLLLOCAL int execIntern(ExceptionSink* xsink);
 
    DLLLOCAL int getDataRows(QoreListNode& l, ExceptionSink* xsink, int max = -1);
-   DLLLOCAL int getDataColumns(QoreHashNode& h, ExceptionSink* xsink, int max = -1);
+   DLLLOCAL int getDataColumns(QoreHashNode& h, ExceptionSink* xsink, int max = -1, bool cols = false);
 
    DLLLOCAL ~QoreMysqlBindGroup() {
       assert(!head);
@@ -433,7 +433,7 @@ public:
    }
 
    // also can be used like "select"
-   DLLLOCAL AbstractQoreNode* exec(ExceptionSink* xsink);
+   DLLLOCAL AbstractQoreNode* exec(ExceptionSink* xsink, bool cols = false);
    DLLLOCAL AbstractQoreNode* selectRows(ExceptionSink* xsink);
    DLLLOCAL QoreHashNode* selectRow(ExceptionSink* xsink);
 
