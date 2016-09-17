@@ -882,8 +882,11 @@ int QoreMysqlBindGroup::getDataRows(QoreListNode& l, ExceptionSink* xsink, int m
    return 0;
 }
 
-int QoreMysqlBindGroup::getDataColumns(QoreHashNode& h, ExceptionSink* xsink, int max) {
+int QoreMysqlBindGroup::getDataColumns(QoreHashNode& h, ExceptionSink* xsink, int max, bool cols) {
    assert(h.empty());
+
+   if (cols)
+      myres.setupColumns(h);
 
    // row count
    int c = 0;
@@ -903,7 +906,7 @@ int QoreMysqlBindGroup::getDataColumns(QoreHashNode& h, ExceptionSink* xsink, in
    return 0;
 }
 
-AbstractQoreNode* QoreMysqlBindGroup::exec(ExceptionSink* xsink) {
+AbstractQoreNode* QoreMysqlBindGroup::exec(ExceptionSink* xsink, bool cols) {
    if (execIntern(xsink))
       return 0;
 
@@ -915,7 +918,7 @@ AbstractQoreNode* QoreMysqlBindGroup::exec(ExceptionSink* xsink) {
 
       myres.bind(stmt);
 
-      return getDataColumns(**h, xsink) ? 0 : h.release();
+      return getDataColumns(**h, xsink, -1, cols) ? 0 : h.release();
    }
 
    return !hasOutput
@@ -1596,7 +1599,7 @@ static AbstractQoreNode* qore_mysql_select(Datasource *ds, const QoreString* qst
    if (rc == 1)
       return qore_mysql_do_sql(conn, qstr, args, xsink);
 
-   return bg.exec(xsink);
+   return bg.exec(xsink, true);
 #else
    return qore_mysql_do_sql(conn, qstr, args, xsink);
 #endif
