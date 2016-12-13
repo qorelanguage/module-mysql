@@ -1,7 +1,13 @@
 MNAME=mysql
 
+if COND_MINGW
+QPP=qpp_native
+else
+QPP=qpp
+endif
+
 .qpp.cpp:
-	qpp $<
+	$(QPP) $<
 
 MYSQL_SOURCES = mysql.cpp
 
