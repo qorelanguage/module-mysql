@@ -1,0 +1,335 @@
+#!/usr/bin/env qore
+
+# database test script
+# databases users must be able to create and destroy tables and procedures, etc
+# in order to execute all tests
+
+%requires qore >= 0.8.13
+
+%requires QUnit
+%requires mysql
+
+%require-our
+%enable-all-warnings
+%new-style
+%exec-class MysqlTest
+
+class MysqlTest inherits QUnit::Test {
+    public {
+    }
+
+    private {
+        hash o;
+        int errors;
+        int test_count;
+
+        string connstr;
+
+        const object_map = (
+            "mysql": (
+                "tables": mysql_tables,
+            ),
+            );
+
+        const mysql_tables = (
+            "family" : "create table family (
+   family_id int not null,
+   name varchar(80) not null )",
+            "people" : "create table people (
+   person_id int not null,
+   family_id int not null,
+   name varchar(250) not null,
+   dob date not null )",
+            "attributes" : "create table attributes (
+   person_id int not null,
+   attribute varchar(80) not null,
+   value varchar(160) not null)",
+            );
+
+        const family_hash = (
+            "Jones" : (
+                "people" : (
+                    "John" : (
+                        "dob" : 1995-03-23,
+                        "eyes" : "brown",
+                        "hair" : "brown" ),
+                    "Alan" : (
+                        "dob" : 1992-06-04,
+                        "eyes" : "blue",
+                        "hair" : "black" ) ) ),
+            "Smith" : (
+                "people" : (
+                    "Arnie" : (
+                        "dob" : 1983-05-13,
+                        "eyes" : "hazel",
+                        "hair" : "blond" ),
+                    "Carol" : (
+                        "dob" : 2003-07-23,
+                        "eyes" : "grey",
+                        "hair" : "brown" ),
+                    "Isaac" : (
+                        "dob" : 2000-04-04,
+                        "eyes" : "green",
+                        "hair" : "red" ),
+                    "Bernard" : (
+                        "dob" : 1979-02-27,
+                        "eyes" : "brown",
+                        "hair" : "brown" ),
+                    "Sylvia" : (
+                        "dob" : 1994-11-10,
+                        "eyes" : "blue",
+                        "hair" : "blond",
+                    ),
+                ),
+            ),
+            );
+
+        const OptionColumn = 20;
+
+        const MyOpts = Opts + (
+            "keep":  "k,keep",
+            );
+    }
+
+    constructor() : Test("MysqlTest", "1.0", \ARGV, MyOpts) {
+        *string cs = ENV.QORE_DB_CONNSTR_MYSQL ?? shift ARGV;
+        if (!cs) {
+            stderr.printf("QORE_DB_CONNSTR_MYSQL environment variable not set; cannot run tests\n");
+            return;
+        }
+        connstr = cs;
+
+        Datasource db(connstr);
+        if (db.getDriverName() != "mysql") {
+            stderr.printf("DB is %y; can only test \"mysql\" with this script\n", db.getDriverName());
+            return;
+        }
+
+        createDataModel(db);
+
+        addTestCase("context test case", \contextTests());
+        addTestCase("transaction test case", \transactionTests());
+        addTestCase("select row test", \selectRowTest());
+
+        set_return_value(main());
+    }
+
+    createDataModel(Datasource db) {
+        purgeTestData(db);
+
+        string driver = db.getDriverName();
+        # create tables
+        hash tables = object_map{driver}.tables;
+
+        foreach string table in (keys tables) {
+            db.exec(tables{table});
+        }
+
+        # create procedures if any
+        foreach string proc in (keys object_map{driver}.procs) {
+            db.exec(object_map{driver}.procs{proc});
+        }
+
+        # create functions if any
+        foreach string func in (keys object_map{driver}.funcs) {
+            db.exec(object_map{driver}.funcs{func});
+        }
+
+        db.exec("insert into family values ( 1, 'Smith' )");
+        db.exec("insert into family values ( 2, 'Jones' )");
+
+        # we insert the dates here using binding by value so we don't have
+        # to worry about each database's specific date format
+        db.exec("insert into people values ( 1, 1, 'Arnie', %v)", 1983-05-13);
+        db.exec("insert into people values ( 2, 1, 'Sylvia', %v)", 1994-11-10);
+        db.exec("insert into people values ( 3, 1, 'Carol', %v)", 2003-07-23);
+        db.exec("insert into people values ( 4, 1, 'Bernard', %v)", 1979-02-27);
+        db.exec("insert into people values ( 5, 1, 'Isaac', %v)", 2000-04-04);
+        db.exec("insert into people values ( 6, 2, 'Alan', %v)", 1992-06-04);
+        db.exec("insert into people values ( 7, 2, 'John', %v)", 1995-03-23);
+
+        db.exec("insert into attributes values ( 1, 'hair', 'blond' )");
+        db.exec("insert into attributes values ( 1, 'eyes', 'hazel' )");
+        db.exec("insert into attributes values ( 2, 'hair', 'blond' )");
+        db.exec("insert into attributes values ( 2, 'eyes', 'blue' )");
+        db.exec("insert into attributes values ( 3, 'hair', 'brown' )");
+        db.exec("insert into attributes values ( 3, 'eyes', 'grey')");
+        db.exec("insert into attributes values ( 4, 'hair', 'brown' )");
+        db.exec("insert into attributes values ( 4, 'eyes', 'brown' )");
+        db.exec("insert into attributes values ( 5, 'hair', 'red' )");
+        db.exec("insert into attributes values ( 5, 'eyes', 'green' )");
+        db.exec("insert into attributes values ( 6, 'hair', 'black' )");
+        db.exec("insert into attributes values ( 6, 'eyes', 'blue' )");
+        db.exec("insert into attributes values ( 7, 'hair', 'brown' )");
+        db.exec("insert into attributes values ( 7, 'eyes', 'brown' )");
+        db.commit();
+    }
+
+    globalTearDown() {
+        if (m_options.keep) {
+            if (m_options.verbose)
+                printf("not deleting test DB data\n");
+        }
+        else
+            purgeTestData();
+    }
+
+    private usageIntern() {
+        TestReporter::usageIntern(OptionColumn);
+        printOption("-k,--keep","do not delete test data in DB", OptionColumn);
+    }
+
+    private purgeTestData(*Datasource db) {
+        if (!db)
+            db = new Datasource(connstr);
+        string driver = db.getDriverName();
+        # drop the tables and ignore exceptions
+        foreach string table in (keys object_map{driver}.tables) {
+            try {
+                db.exec("drop table " + table);
+                db.commit();
+            }
+            catch () {
+                db.commit();
+            }
+        }
+
+        # drop procedures and ignore exceptions
+        foreach string proc in (keys object_map{driver}.procs) {
+            *string cmd = object_map{driver}.drop_proc_cmd;
+            if (!exists cmd)
+                cmd = "drop procedure";
+            try {
+                db.exec(cmd + " " + proc);
+                db.commit();
+            }
+            catch () {
+                db.commit();
+            }
+        }
+
+        # drop functions and ignore exceptions
+        foreach string func in (keys object_map{driver}.funcs) {
+            *string cmd = object_map{driver}.drop_func_cmd;
+            if (!cmd)
+                cmd = "drop function";
+            try {
+                db.exec(cmd + " " + func);
+                db.commit();
+            }
+            catch () {
+                db.commit();
+            }
+        }
+    }
+
+    contextTests() {
+        Datasource db(connstr);
+
+        # first we select all the data from the tables and then use
+        # context statements to order the output hierarchically
+
+        # context statements are most useful when a set of queries can be executed once
+        # and the results processed many times by creating "views" with context statements
+
+        hash people = db.select("select * from people");
+        hash attributes = db.select("select * from attributes");
+
+        # in this test, we create a big hash structure out of the queries executed above
+        # and compare it at the end to the expected result
+
+        # display each family sorted by family name
+        hash fl;
+        context family (db.select("select * from family")) sortBy (%name) {
+            hash pl;
+
+            # display people, sorted by eye color, descending
+            context people (people)
+                sortDescendingBy (find %value in attributes
+                                  where (%attribute == "eyes"
+                                         && %person_id == %people:person_id))
+                where (%family_id == %family:family_id) {
+                    hash al;
+                    context (attributes) sortBy (%attribute) where (%person_id == %people:person_id) {
+                        al.%attribute = %value;
+                    }
+                    # leave out the ID fields and name from hash under name; subtracting a
+                    # string from a hash removes that key from the result
+                    # this is "doing it the hard way", there is only one key left,
+                    # "dob", then attributes are added directly into the person hash
+                    pl.%name = %% - "family_id" - "person_id" - "name" + al;
+            }
+            # leave out family_id and name fields (leaving an empty hash)
+            fl.%name = %% - "family_id" - "name" + ( "people" : pl );
+        }
+
+        # test context ordering
+        assertEq(("Jones", "Smith"), fl.keys());
+
+        assertEq(("Arnie", "Carol", "Isaac", "Bernard", "Sylvia"), fl.Smith.people.keys());
+
+        # test entire context value
+        assertEq(family_hash, fl);
+    }
+
+    testTimeout(Datasource db, Counter c) {
+        db.setTransactionLockTimeout(1ms);
+        try {
+            # this should cause a TRANSACTION-LOCK-TIMEOUT exception to be thrown
+            db.exec("insert into family values (3, 'Test')\n");
+            assertEq(True, False);
+            db.exec("delete from family where name = 'Test'");
+        }
+        catch (hash ex) {
+            assertEq(True, True);
+        }
+        # signal parent thread to continue
+        c.dec();
+    }
+
+    transactionTests() {
+        Datasource db(connstr);
+        Datasource ndb(connstr);
+
+        # first, we insert a new row into "family" but do not commit it
+        int rows = db.exec("insert into family values (3, 'Test')\n");
+        assertEq(1, rows);
+
+        *string r = ndb.selectRow("select name from family where family_id = 3").name;
+        assertEq(NOTHING, r);
+
+        # now we verify that the new row is visible to the inserting datasource
+        r = db.selectRow("select name from family where family_id = 3").name;
+        assertEq("Test", r);
+
+        # test datasource timeout
+        # this Counter variable will allow the parent thread to sleep
+        # until the child thread times out
+        Counter c(1);
+        background testTimeout(db, c);
+
+        # wait for child thread to time out
+        c.waitForZero();
+
+        # now, we commit the transaction
+        db.commit();
+
+        # now we verify that the new row is visible in the other datasource
+        r = ndb.selectRow("select name from family where family_id = 3").name;
+        assertEq("Test", r);
+
+        # now we delete the row we inserted (so we can repeat the test)
+        rows = ndb.exec("delete from family where family_id = 3");
+        assertEq(1, rows);
+        ndb.commit();
+    }
+
+    selectRowTest() {
+        Datasource db(connstr);
+
+        on_exit
+            db.rollback();
+
+        assertThrows("DBI-SELECT-ROW-ERROR", \db.selectRow(), "select * from family");
+    }
+}

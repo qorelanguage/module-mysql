@@ -166,6 +166,7 @@ hash: (1 member)
     @subsection mysql2021 mysql Driver Version 2.0.2.1
     <b>New Features and Bug Fixes</b>
     - updated SQLStatement::fetchColumns() to return an empty hash when no data is available (<a href="https://github.com/qorelanguage/qore/issues/1241">issue 1241</a>)
+    - fixed a bug where \c DBI-SELECT-ROW-ERROR exceptions were being raised as \c ORACLE-SELECT-ROW-ERROR exceptions (<a href="https://github.com/qorelanguage/qore/issues/2542">issue 2542</a>)
 
     @subsection mysql202 mysql Driver Version 2.0.2
     - fixed formatting bugs in invalid value specification error messages
