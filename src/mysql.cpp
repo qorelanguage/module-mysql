@@ -968,7 +968,7 @@ QoreHashNode* QoreMysqlBindGroup::selectRow(ExceptionSink* xsink) {
 
          // see if there is a second row
          if (!mysql_stmt_fetch(stmt)) {
-            xsink->raiseException("MYSQL-SELECT-ROW-ERROR", "SQL passed to selectRow() returned more than 1 row");
+            xsink->raiseException("DBI-SELECT-ROW-ERROR", "SQL passed to selectRow() returned more than 1 row");
             return 0;
          }
 
@@ -1451,7 +1451,7 @@ static QoreHashNode* get_result_set(const QoreMysqlConnection& conn, MYSQL_RES *
       }
       rn++;
       if (single_row && rn > 1) {
-         xsink->raiseException("MYSQL-SELECT-ROW-ERROR", "SQL passed to selectRow() returned more than 1 row");
+         xsink->raiseException("DBI-SELECT-ROW-ERROR", "SQL passed to selectRow() returned more than 1 row");
          return 0;
       }
       for (int i = 0; i < num_fields; i++) {
