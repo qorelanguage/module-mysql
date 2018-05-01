@@ -104,7 +104,7 @@ This RPM provides API documentation, test and example programs
 %doc docs/mysql/html test/db-test.q test/sql-stmt.q
 
 %changelog
-* Tue Sep 13 David Nichols <david@qore.org> 2.0.2.1
+* Tue May 1 2018 David Nichols <david@qore.org> 2.0.2.1
 - updated version to 2.0.2.1
 
 * Sun Dec 1 2013 David Nichols <david@qore.org> 2.0.2
