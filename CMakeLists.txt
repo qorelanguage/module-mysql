@@ -8,7 +8,7 @@ include(CheckCXXCompilerFlag)
 include(CheckCXXSourceCompiles)
 include(CheckCXXSymbolExists)
 
-find_package(Qore REQUIRED)
+find_package(Qore 0.9 REQUIRED)
 
 # Check for C++11.
 include(CheckCXXCompilerFlag)
@@ -45,7 +45,7 @@ set(CMAKE_REQUIRED_LIBRARIES ${QORE_LIBRARY})
 check_cxx_source_compiles("
 #include <qore/Qore.h>
 int main(void){
-#if (QORE_MODULE_API_MAJOR == 0 && QORE_MODULE_API_MINOR < 7) 
+#if (QORE_MODULE_API_MAJOR == 0 && QORE_MODULE_API_MINOR < 7)
 #error
 #endif
 return 0;
