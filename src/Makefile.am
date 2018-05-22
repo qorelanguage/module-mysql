@@ -7,7 +7,7 @@ QPP=qpp
 endif
 
 .qpp.cpp:
-	$(QPP) $<
+	$(QPP) -V $<
 
 MYSQL_SOURCES = mysql.cpp
 
