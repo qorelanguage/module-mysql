@@ -60,8 +60,8 @@ public:
 
    DLLLOCAL void reset() {
       if (bindbuf) {
-	 // delete buffer
-	 for (int i = 0; i < num_fields; i++) {
+      // delete buffer
+         for (int i = 0; i < num_fields; i++) {
             switch (bindbuf[i].buffer_type) {
                case MYSQL_TYPE_DOUBLE:
                case MYSQL_TYPE_LONGLONG:
@@ -80,11 +80,11 @@ public:
                   break;
             }
          }
-	 delete [] bindbuf;
+         delete [] bindbuf;
          bindbuf = 0;
       }
       if (bi) {
-	 delete [] bi;
+         delete [] bi;
          bi = 0;
       }
    }
@@ -173,7 +173,7 @@ public:
 
     DLLLOCAL int reset(ExceptionSink* xsink) {
         if (data.tstr) {
-        data.tstr->deref();
+            data.tstr->deref();
             data.tstr = 0;
         }
         if (data.value) {
@@ -235,12 +235,12 @@ public:
     DLLLOCAL int reconnect(Datasource *ds, MYSQL_STMT *&stmt, const QoreString& str, ExceptionSink* xsink) {
         // throw an exception if a transaction is in progress
         if (wasInTransaction(ds))
-        xsink->raiseException("DBI:MYSQL:CONNECTION-ERROR", "connection to MySQL database server lost while in a transaction; transaction has been lost");
+            xsink->raiseException("DBI:MYSQL:CONNECTION-ERROR", "connection to MySQL database server lost while in a transaction; transaction has been lost");
 
         MYSQL *new_db = qore_mysql_init(ds, xsink);
         if (!new_db) {
             ds->connectionAborted();
-        return -1;
+            return -1;
         }
 
         printd(5, "mysql datasource %08p reconnected after timeout\n", ds);
@@ -254,11 +254,11 @@ public:
         mysql_stmt_close(stmt);
         stmt = stmt_init(xsink);
         if (!stmt)
-        return -1;
+            return -1;
 
         // prepare the statement for execution (again)
         if (mysql_stmt_prepare(stmt, str.getBuffer(), str.strlen()))
-        return -1;
+            return -1;
 
         return 0;
     }
@@ -282,7 +282,7 @@ public:
     DLLLOCAL MYSQL_STMT *stmt_init(ExceptionSink* xsink) {
         MYSQL_STMT *stmt = mysql_stmt_init(db);
         if (!stmt)
-        xsink->raiseException("DBI:MYSQL:ERROR", "error creating MySQL statement handle: out of memory");
+            xsink->raiseException("DBI:MYSQL:ERROR", "error creating MySQL statement handle: out of memory");
         return stmt;
     }
 
@@ -361,9 +361,9 @@ protected:
     DLLLOCAL inline void add(class QoreMysqlBindNode *c) {
         len++;
         if (!tail)
-        head = c;
+            head = c;
         else
-        tail->next = c;
+            tail->next = c;
         tail = c;
     }
 
