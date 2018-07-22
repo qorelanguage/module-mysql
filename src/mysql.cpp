@@ -1107,76 +1107,76 @@ QoreHashNode* QoreMysqlPreparedStatement::describe(ExceptionSink *xsink) {
    for (int i = 0; i < myres.getNumFields(); ++i) {
       ReferenceHolder<QoreHashNode> col(new QoreHashNode, xsink);
       col->setKeyValue(namestr, new QoreStringNode(myres.getFieldName(i)), xsink);
-      col->setKeyValue(maxsizestr, new QoreBigIntNode(myres.getFieldMaxLength(i)), xsink);
-      col->setKeyValue(internalstr, new QoreBigIntNode(myres.getFieldType(i)), xsink);
+      col->setKeyValue(maxsizestr, myres.getFieldMaxLength(i), xsink);
+      col->setKeyValue(internalstr, myres.getFieldType(i), xsink);
       switch (myres.getFieldType(i)) {
       case MYSQL_TYPE_TINY:            // TINYINT field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_INT), xsink);
+         col->setKeyValue(typestr, NT_INT, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("TINYINT"), xsink);
          break;
       case MYSQL_TYPE_SHORT:           // SMALLINT field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_INT), xsink);
+         col->setKeyValue(typestr, NT_INT, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("SMALLINT"), xsink);
          break;
       case MYSQL_TYPE_LONG:            // INTEGER field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_INT), xsink);
+         col->setKeyValue(typestr, NT_INT, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("INTEGER"), xsink);
          break;
       case MYSQL_TYPE_INT24:           // MEDIUMINT field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_INT), xsink);
+         col->setKeyValue(typestr, NT_INT, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("MEDIUMINT"), xsink);
          break;
       case MYSQL_TYPE_LONGLONG:        // BIGINT field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_INT), xsink);
+         col->setKeyValue(typestr, NT_INT, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("BIGINT"), xsink);
          break;
       case MYSQL_TYPE_DECIMAL:         // DECIMAL or NUMERIC field
       case MYSQL_TYPE_NEWDECIMAL:      // Precision math DECIMAL or NUMERIC
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_NUMBER), xsink);
+         col->setKeyValue(typestr, NT_NUMBER, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("NUMERIC"), xsink);
          break;
       case MYSQL_TYPE_FLOAT:           // FLOAT field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_FLOAT), xsink);
+         col->setKeyValue(typestr, NT_FLOAT, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("FLOAT"), xsink);
          break;
       case MYSQL_TYPE_DOUBLE:          // DOUBLE or REAL field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_FLOAT), xsink);
+         col->setKeyValue(typestr, NT_FLOAT, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("DOUBLE"), xsink);
          break;
       case MYSQL_TYPE_BIT:             // BIT field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_INT), xsink);
+         col->setKeyValue(typestr, NT_INT, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("BIT"), xsink);
          break;
       case MYSQL_TYPE_TIMESTAMP:       // TIMESTAMP field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_DATE), xsink);
+         col->setKeyValue(typestr, NT_DATE, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("TIMESTAMP"), xsink);
          break;
       case MYSQL_TYPE_DATE:            // DATE field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_DATE), xsink);
+         col->setKeyValue(typestr, NT_DATE, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("DATE"), xsink);
          break;
       case MYSQL_TYPE_TIME:            // TIME field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_DATE), xsink);
+         col->setKeyValue(typestr, NT_DATE, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("TIME"), xsink);
          break;
       case MYSQL_TYPE_DATETIME:        // DATETIME field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_DATE), xsink);
+         col->setKeyValue(typestr, NT_DATE, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("DATETIME"), xsink);
          break;
       case MYSQL_TYPE_YEAR:            // YEAR field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_DATE), xsink);
+         col->setKeyValue(typestr, NT_DATE, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("YEAR"), xsink);
          break;
       case MYSQL_TYPE_STRING:          // CHAR or BINARY field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_STRING), xsink);
+         col->setKeyValue(typestr, NT_STRING, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("CHAR"), xsink);
          break;
       case MYSQL_TYPE_VAR_STRING:      // VARCHAR or VARBINARY field
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_STRING), xsink);
+         col->setKeyValue(typestr, NT_STRING, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("VARCHAR"), xsink);
          break;
       case MYSQL_TYPE_BLOB:            // BLOB or TEXT field (use max_length to determine the maximum length)
-         col->setKeyValue(typestr, new QoreBigIntNode(NT_STRING), xsink);
+         col->setKeyValue(typestr, NT_STRING, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("TEXT"), xsink);
          break;
       case MYSQL_TYPE_SET:             // SET field
@@ -1184,7 +1184,7 @@ QoreHashNode* QoreMysqlPreparedStatement::describe(ExceptionSink *xsink) {
       case MYSQL_TYPE_GEOMETRY:        // Spatial field
       case MYSQL_TYPE_NULL:            // NULL-type field
       default:
-         col->setKeyValue(typestr, new QoreBigIntNode(-1), xsink);
+         col->setKeyValue(typestr, -1, xsink);
          col->setKeyValue(dbtypestr, new QoreStringNode("n/a"), xsink);
          break;
       } // switch
