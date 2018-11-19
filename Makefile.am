@@ -34,7 +34,7 @@ docs/mainpage.dox: docs/mainpage.dox.tmpl
 	$(QDX) -d $< $@
 
 docs/doxyfile: docs/doxyfile.tmpl
-	sed s/__VERSION__/${VERSION}/ $< > $@
+	sed -e s/__VERSION__/${VERSION}/ -e s:__USERMODDIR__:${usermoddir}: $< > $@
 
 doxygen-doc: $(DOXYGEN_OUTPUT)
 
