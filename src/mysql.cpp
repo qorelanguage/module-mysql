@@ -913,20 +913,34 @@ QoreValue QoreMysqlBindGroup::selectRows(ExceptionSink* xsink) {
 }
 
 QoreHashNode* QoreMysqlBindGroup::selectRow(ExceptionSink* xsink) {
-    if (execIntern(xsink))
+    if (execIntern(xsink)) {
+        //printd(5, "QoreMysqlBindGroup::selectRow() this: %p xsink: %d\n", this, (bool)*xsink);
         return nullptr;
+    }
 
     if (myres) {
         my_ulonglong rowcnt = mysql_stmt_affected_rows(stmt);
-        if (!rowcnt)
+        //printd(5, "QoreMysqlBindGroup::selectRow() this: %p rowcnt: %d\n", this, (int)rowcnt);
+        if (!rowcnt) {
             return nullptr;
+        }
 
         myres.bind(stmt);
 
         QoreString tstr;
         const QoreEncoding* enc = ds->getQoreEncoding();
 
-        if (!mysql_stmt_fetch(stmt)) {
+        int rc = mysql_stmt_fetch(stmt);
+        if (rc == 1) {
+            const char* errstr = mysql_stmt_error(stmt);
+            if (!errstr) {
+                errstr = "unknown error occurred fetching results";
+            }
+            xsink->raiseException("DBI-SELECT-ROW-ERROR", "selectRow() failed: %s", errstr);
+            return nullptr;
+        }
+        //printd(5, "QoreMysqlBindGroup::selectRow() this: %p fetch: %d\n", this, rc);
+        if (!rc) {
             ReferenceHolder<QoreHashNode> h(new QoreHashNode(autoTypeInfo), xsink);
 
             for (int i = 0; i < myres.getNumFields(); i++)
@@ -938,9 +952,11 @@ QoreHashNode* QoreMysqlBindGroup::selectRow(ExceptionSink* xsink) {
                 return nullptr;
             }
 
+            //printd(5, "QoreMysqlBindGroup::selectRow() this: %p returning h: %p\n", this, *h);
             return h.release();
         }
 
+        //printd(5, "QoreMysqlBindGroup::selectRow() this: %p FETCH FAILED!\n", this);
         return nullptr;
     }
 
@@ -1417,6 +1433,7 @@ static QoreHashNode* get_result_set(const QoreMysqlConnection& conn, MYSQL_RES *
                 h->getKeyValue(cvec[i].c_str()).get<QoreListNode>()->push(n, xsink);
         }
     }
+    //printd(5, "get_result_set() conn: %p row: %p h: %p\n", &conn, row, *h);
 
     return h.release();
 }
@@ -1479,28 +1496,29 @@ static QoreValue qore_mysql_do_sql(const QoreMysqlConnection& conn, const QoreSt
 }
 
 static QoreHashNode* qore_mysql_do_select_row(const QoreMysqlConnection& conn, const QoreString* qstr, const QoreListNode* args, ExceptionSink* xsink) {
-   QORE_TRACE("qore_mysql_do_select_row()");
+    QORE_TRACE("qore_mysql_do_select_row()");
 
-   TempEncodingHelper tqstr(qstr, conn.ds.getQoreEncoding(), xsink);
-   if (!tqstr)
-      return 0;
+    TempEncodingHelper tqstr(qstr, conn.ds.getQoreEncoding(), xsink);
+    if (!tqstr)
+        return 0;
 
-   if (mysql_query(conn.db, tqstr->getBuffer())) {
-      xsink->raiseException("DBI:MYSQL:SELECT-ERROR", (char *)mysql_error(conn.db));
-      return 0;
-   }
+    if (mysql_query(conn.db, tqstr->getBuffer())) {
+        xsink->raiseException("DBI:MYSQL:SELECT-ERROR", (char *)mysql_error(conn.db));
+        return 0;
+    }
 
-   if (!mysql_field_count(conn.db))
-      return 0;
+    if (!mysql_field_count(conn.db))
+        return 0;
 
-   MYSQL_RES* res = mysql_store_result(conn.db);
-   if (!res) {
-      xsink->raiseException("DBI:MYSQL:SELECT-ERROR", (char *)mysql_error(conn.db));
-      return 0;
-   }
-   ON_BLOCK_EXIT(mysql_free_result, res);
+    MYSQL_RES* res = mysql_store_result(conn.db);
+    if (!res) {
+        xsink->raiseException("DBI:MYSQL:SELECT-ERROR", (char *)mysql_error(conn.db));
+        return 0;
+    }
+    ON_BLOCK_EXIT(mysql_free_result, res);
 
-   return get_result_set(conn, res, xsink, true);
+    //printd(5, "qore_mysql_do_select_row() conn: %p sql: %s\n", &conn, tqstr->c_str());
+    return get_result_set(conn, res, xsink, true);
 }
 
 static QoreValue qore_mysql_select_rows(Datasource *ds, const QoreString* qstr, const QoreListNode* args, ExceptionSink* xsink) {
@@ -1522,6 +1540,7 @@ static QoreHashNode* qore_mysql_select_row(Datasource *ds, const QoreString* qst
     check_init();
     QoreMysqlBindGroupHelper bg(ds, xsink);
     int rc = bg.prepareAndBind(qstr, args, xsink);
+    //printd(5, "qore_mysql_select_row() conn: %p (rc: %d xsink: %d) sql: %s\n", &conn, rc, (bool)*xsink, qstr->c_str());
     if (rc == -1)
         return 0;
 

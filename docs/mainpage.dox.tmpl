@@ -101,6 +101,7 @@ date now = db.selectRow("select current_timestamp into :time").time;
     When selecting date/time values, the values returned are tagged with the server's time zone.
 
     Note that the above rules are applied when the current Program's time zone settings are different than the connection's time zone settings at the time when the write operation (bind) read operation (select) is performed.  This is meant to provide consistent support to connecting to a database server in a different time zone.
+git push --set-upstream origin bugfix/3745_3747_sql_fixes
 
     @subsection mysql_to_qore MySQL to Qore Type Mappings
 
@@ -165,8 +166,12 @@ hash: (1 member)
 
     @subsection mysql2021 mysql Driver Version 2.0.2.1
     <b>New Features and Bug Fixes</b>
-    - updated SQLStatement::fetchColumns() to return an empty hash when no data is available (<a href="https://github.com/qorelanguage/qore/issues/1241">issue 1241</a>)
-    - fixed a bug where \c DBI-SELECT-ROW-ERROR exceptions were being raised as \c MYSQL-SELECT-ROW-ERROR exceptions (<a href="https://github.com/qorelanguage/qore/issues/2542">issue 2542</a>)
+    - updated SQLStatement::fetchColumns() to return an empty hash when no data is available
+      (<a href="https://github.com/qorelanguage/qore/issues/1241">issue 1241</a>)
+    - fixed a bug where \c DBI-SELECT-ROW-ERROR exceptions were being raised as \c MYSQL-SELECT-ROW-ERROR exceptions
+      (<a href="https://github.com/qorelanguage/qore/issues/2542">issue 2542</a>)
+    - fixed selectRow() to properly report errors in fetching data
+      (<a href="https://github.com/qorelanguage/qore/issues/3746">issue 3746</a>)
 
     @subsection mysql202 mysql Driver Version 2.0.2
     - fixed formatting bugs in invalid value specification error messages
