@@ -101,7 +101,6 @@ date now = db.selectRow("select current_timestamp into :time").time;
     When selecting date/time values, the values returned are tagged with the server's time zone.
 
     Note that the above rules are applied when the current Program's time zone settings are different than the connection's time zone settings at the time when the write operation (bind) read operation (select) is performed.  This is meant to provide consistent support to connecting to a database server in a different time zone.
-git push --set-upstream origin bugfix/3745_3747_sql_fixes
 
     @subsection mysql_to_qore MySQL to Qore Type Mappings
 
