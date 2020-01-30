@@ -4,7 +4,7 @@
 
     Qore Programming Language
 
-    Copyright (C) 2003 - 2018 Qore Technologies, s.r.o.
+    Copyright (C) 2003 - 2020 Qore Technologies, s.r.o.
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -31,9 +31,15 @@
 
 #include <mysql.h>
 
+#include <string>
+
 #ifndef MYSQL_PORT
 #define MYSQL_PORT 3306
 #endif
+
+#define MYSQL_OPT_COLLATION "collation"
+
+#define MYSQL_DEFAULT_COLLATION "latin1_general_cs"
 
 class QoreMysqlConnection;
 
@@ -193,7 +199,8 @@ public:
     DLLLOCAL int bindValue(const QoreMysqlConnection& conn, MYSQL_BIND *buf, ExceptionSink* xsink);
 };
 
-static MYSQL *qore_mysql_init(Datasource *ds, ExceptionSink* xsink);
+static MYSQL* qore_mysql_init(Datasource *ds, ExceptionSink* xsink);
+static int mysql_set_collation(MYSQL* db, const char* collation_str, ExceptionSink* xsink);
 
 static inline bool wasInTransaction(Datasource *ds) {
 #ifdef _QORE_HAS_DATASOURCE_ACTIVETRANSACTION
@@ -221,11 +228,12 @@ public:
     Datasource& ds;
     const AbstractQoreZoneInfo* server_tz;
     int numeric_support;
+    std::string collation = MYSQL_DEFAULT_COLLATION;
 
     DLLLOCAL QoreMysqlConnection(MYSQL* d, Datasource& n_ds)
         : db(d), ds(n_ds),
-            server_tz(currentTZ()),
-            numeric_support(OPT_NUM_DEFAULT) {
+        server_tz(currentTZ()),
+        numeric_support(OPT_NUM_DEFAULT) {
     }
 
     DLLLOCAL ~QoreMysqlConnection() {
@@ -237,9 +245,13 @@ public:
         if (wasInTransaction(ds))
             xsink->raiseException("DBI:MYSQL:CONNECTION-ERROR", "connection to MySQL database server lost while in a transaction; transaction has been lost");
 
+        const char* collation_str;
         MYSQL *new_db = qore_mysql_init(ds, xsink);
         if (!new_db) {
             ds->connectionAborted();
+            return -1;
+        }
+        if (collation != MYSQL_DEFAULT_COLLATION && mysql_set_collation(new_db, collation.c_str(), xsink)) {
             return -1;
         }
 
@@ -303,6 +315,24 @@ public:
             numeric_support = OPT_NUM_NUMERIC;
             return 0;
         }
+
+        if (!strcasecmp(opt, MYSQL_OPT_COLLATION)) {
+            assert(val.getType() == NT_STRING);
+            const QoreStringNode* str = val.get<const QoreStringNode>();
+            std::string new_collation;
+            if (str->empty()) {
+                xsink->raiseException("MYSQL-OPTION-ERROR", "the 'collation' option requires a value; leaving with " \
+                    "the current value: '%s'", collation.c_str());
+                return -1;
+            }
+            new_collation = str->c_str();
+            int rc = mysql_set_collation(db, new_collation.c_str(), xsink);
+            if (!rc) {
+                collation = new_collation;
+            }
+            return rc;
+        }
+
         assert(!strcasecmp(opt, DBI_OPT_TIMEZONE));
         assert(val.getType() == NT_STRING);
         const QoreStringNode* str = val.get<const QoreStringNode>();
@@ -322,6 +352,13 @@ public:
 
         if (!strcasecmp(opt, DBI_OPT_NUMBER_NUMERIC))
             return numeric_support == OPT_NUM_NUMERIC;
+
+        if (!strcasecmp(opt, MYSQL_OPT_COLLATION)) {
+            if (collation.empty()) {
+                return QoreValue();
+            }
+            return QoreValue(new QoreStringNode(collation));
+        }
 
         assert(!strcasecmp(opt, DBI_OPT_TIMEZONE));
         return new QoreStringNode(tz_get_region_name(server_tz));

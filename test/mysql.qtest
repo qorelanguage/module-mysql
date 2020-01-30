@@ -4,7 +4,7 @@
 # databases users must be able to create and destroy tables and procedures, etc
 # in order to execute all tests
 
-%requires qore >= 0.8.13
+%requires qore >= 0.9.4
 
 %requires QUnit
 %requires mysql
@@ -107,11 +107,19 @@ class MysqlTest inherits QUnit::Test {
 
         createDataModel(db);
 
+        addTestCase("collation test", \collationTest());
         addTestCase("context test case", \contextTests());
         addTestCase("transaction test case", \transactionTests());
         addTestCase("select row test", \selectRowTest());
 
         set_return_value(main());
+    }
+
+    collationTest() {
+        Datasource db(connstr);
+        db.open();
+        assertEq("latin1_general_cs", db.getOption("collation"));
+        assertThrows("MYSQL-COLLATION-ERROR", \db.setOption(), ("collation", "xxx"));
     }
 
     createDataModel(Datasource db) {

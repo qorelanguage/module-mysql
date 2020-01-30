@@ -6,12 +6,7 @@
 
     Qore Programming Language
 
-    0.4.0 changes:
-    * multi-threaded access added
-    * transaction management added
-    * character set support added
-
-    Copyright (C) 2003 - 2018 Qore Technologies, s.r.o.
+    Copyright (C) 2003 - 2020 Qore Technologies, s.r.o.
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -132,29 +127,31 @@ static struct mapEntry {
 #define NUM_CHARMAPS (sizeof(mapList) / sizeof(struct mapEntry))
 
 static const QoreEncoding* get_qore_cs(char *cs) {
-   int end;
-   // get end of charset name
-   char *p = strchr(cs, '_');
-   if (p)
-      end = p - cs;
-   else
-      end = strlen(cs);
+    int end;
+    // get end of charset name
+    char *p = strchr(cs, '_');
+    if (p)
+        end = p - cs;
+    else
+        end = strlen(cs);
 
-   for (unsigned i = 0; i < NUM_CHARMAPS; i++)
-      if (!strncasecmp(cs, mapList[i].mysql, end))
-         return mapList[i].id;
+    for (unsigned i = 0; i < NUM_CHARMAPS; ++i)
+        if (!strncasecmp(cs, mapList[i].mysql, end))
+            return mapList[i].id;
 
-   QoreString cset;
-   cset.concat(cs, end);
-   return QEM.findCreate(&cset);
+    QoreString cset;
+    cset.concat(cs, end);
+    return QEM.findCreate(&cset);
 }
 
 static char* get_mysql_cs(const QoreEncoding* id) {
-   for (unsigned i = 0; i < NUM_CHARMAPS; i++)
-      if (mapList[i].id == id)
-         return mapList[i].mysql;
+    for (unsigned i = 0; i < NUM_CHARMAPS; ++i) {
+        if (mapList[i].id == id) {
+            return mapList[i].mysql;
+        }
+    }
 
-   return NULL;
+    return nullptr;
 }
 
 void my_val::assign(const QoreMysqlConnection& conn, const DateTime &d) {
@@ -220,71 +217,86 @@ static DateTimeNode* qore_mysql_makedt(const QoreMysqlConnection& conn, int year
 }
 
 static MYSQL* qore_mysql_init(Datasource* ds, ExceptionSink* xsink) {
-   printd(5, "qore_mysql_init() datasource %08p for DB=%s\n", ds,
-          ds->getDBName() ? ds->getDBName() : "unknown");
+    printd(5, "qore_mysql_init() datasource %p for DB: %s\n", ds, ds->getDBName() ? ds->getDBName() : "unknown");
 
-   if (!ds->getDBName()) {
-      xsink->raiseException("DATASOURCE-MISSING-DBNAME", "Datasource has an empty dbname parameter");
-      return 0;
-   }
+    if (!ds->getDBName()) {
+        xsink->raiseException("DATASOURCE-MISSING-DBNAME", "Datasource has an empty dbname parameter");
+        return 0;
+    }
 
-   if (ds->getDBEncoding())
-      ds->setQoreEncoding(get_qore_cs((char *)ds->getDBEncoding()));
-   else {
-      char *enc = get_mysql_cs(QCS_DEFAULT);
-      if (!enc) {
-         xsink->raiseException("DBI:MYSQL:UNKNOWN-CHARACTER-SET", "cannot find the mysql character set equivalent for '%s'", QCS_DEFAULT->getCode());
-         return 0;
-      }
+    if (ds->getDBEncoding()) {
+        ds->setQoreEncoding(get_qore_cs((char*)ds->getDBEncoding()));
+    } else {
+        char *enc = get_mysql_cs(QCS_DEFAULT);
+        if (!enc) {
+            xsink->raiseException("DBI:MYSQL:UNKNOWN-CHARACTER-SET", "cannot find the mysql character set equivalent for '%s'", QCS_DEFAULT->getCode());
+            return 0;
+        }
 
-      ds->setDBEncoding(enc);
-      ds->setQoreEncoding(QCS_DEFAULT);
-   }
+        ds->setDBEncoding(enc);
+        ds->setQoreEncoding(QCS_DEFAULT);
+    }
 
-   MYSQL *db = mysql_init(NULL);
-   if (!db) {
-      xsink->outOfMemory();
-      return 0;
-   }
-   int port = ds->getPort();
+    MYSQL* db = mysql_init(NULL);
+    if (!db) {
+        xsink->outOfMemory();
+        return 0;
+    }
+    int port = ds->getPort();
 
-   if (!port && ds->getHostName())
-      port = MYSQL_PORT;
+    if (!port && ds->getHostName())
+        port = MYSQL_PORT;
 
-   printd(3, "qore_mysql_init(): user: '%s' pass: '%s' db: '%s' (encoding=%s) host: '%s' port: %d\n",
-          ds->getUsername(), ds->getPassword(), ds->getDBName(), ds->getDBEncoding() ? ds->getDBEncoding() : "(none)", ds->getHostName(), port);
+    printd(3, "qore_mysql_init(): user: '%s' pass: '%s' db: '%s' (encoding=%s) host: '%s' port: %d\n",
+            ds->getUsername(), ds->getPassword(), ds->getDBName(), ds->getDBEncoding() ? ds->getDBEncoding() : "(none)", ds->getHostName(), port);
 
-
-   if (!mysql_real_connect(db, ds->getHostName(), ds->getUsername(), ds->getPassword(), ds->getDBName(), port, 0, CLIENT_FOUND_ROWS)) {
-      xsink->raiseException("DBI:MYSQL:CONNECT-ERROR", "%s", mysql_error(db));
-      mysql_close(db);
-      return 0;
-   }
+    if (!mysql_real_connect(db, ds->getHostName(), ds->getUsername(), ds->getPassword(), ds->getDBName(), port, 0, CLIENT_FOUND_ROWS)) {
+        xsink->raiseException("DBI:MYSQL:CONNECT-ERROR", "%s", mysql_error(db));
+        mysql_close(db);
+        return 0;
+    }
 
 #ifdef HAVE_MYSQL_SET_CHARACTER_SET
-   // set character set
-   mysql_set_character_set(db, ds->getDBEncoding());
+    // set character set
+    mysql_set_character_set(db, ds->getDBEncoding());
 #endif
 
 #ifdef HAVE_MYSQL_COMMIT
-   // autocommits are handled by qore, not by Mysql
-   mysql_autocommit(db, false);
+    // autocommits are handled by qore, not by Mysql
+    mysql_autocommit(db, false);
 
-   // set transaction handling
-   if (mysql_query(db, "set session transaction isolation level read committed")) {
-      xsink->raiseException("DBI:MYSQL:INIT-ERROR", (char *)mysql_error(db));
-      mysql_close(db);
-      return 0;
-   }
+    // set transaction handling
+    if (mysql_query(db, "set session transaction isolation level read committed")) {
+        xsink->raiseException("DBI:MYSQL:INIT-ERROR", (const char*)mysql_error(db));
+        mysql_close(db);
+        return nullptr;
+    }
 #endif
 
-   return db;
+    // set collation
+    if (mysql_set_collation(db, MYSQL_DEFAULT_COLLATION, xsink)) {
+        assert(*xsink);
+        mysql_close(db);
+        return nullptr;
+    }
+
+    return db;
+}
+
+int mysql_set_collation(MYSQL* db, const char* collation_str, ExceptionSink* xsink) {
+    QoreStringMaker sql("set collation_connection = '%s'", collation_str);
+    if (mysql_query(db, sql.c_str())) {
+        xsink->raiseException("MYSQL-COLLATION-ERROR", (const char*)mysql_error(db));
+        return -1;
+    }
+
+    return 0;
 }
 
 static int qore_mysql_commit(Datasource* ds, ExceptionSink* xsink) {
 #ifdef HAVE_MYSQL_COMMIT
     check_init();
-    QoreMysqlConnection *d_mysql =(QoreMysqlConnection *)ds->getPrivateData();
+    QoreMysqlConnection* d_mysql = (QoreMysqlConnection*)ds->getPrivateData();
 
     // calls mysql_commit() on the connection
     if (d_mysql->commit()) {
@@ -465,33 +477,27 @@ QoreValue MyResult::getBoundColumnValue(int i, bool destructive) {
             if (destructive) {
                 n = new BinaryNode((void*)p, len);
                 bindbuf[i].buffer = 0;
-            }
-            else {
+            } else {
                 BinaryNode* b = new BinaryNode();
                 b->append(p, len);
                 n = b;
             }
-        }
-        else {
+        } else {
             //printd(5, "string destr: %d (%ld): '%s'\n", destructive, strlen(p), p);
             if (destructive) {
                 n = new QoreStringNode((char*)p, len, len + 1, enc);
                 bindbuf[i].buffer = 0;
-            }
-            else
+            } else
                 n = new QoreStringNode(p, enc);
         }
-    }
-    else if (bindbuf[i].buffer_type == MYSQL_TYPE_DATETIME) {
+    } else if (bindbuf[i].buffer_type == MYSQL_TYPE_DATETIME) {
         MYSQL_TIME *t = (MYSQL_TIME*)bindbuf[i].buffer;
         n = qore_mysql_makedt(*conn, t->year, t->month, t->day, t->hour, t->minute, t->second);
-    }
-    else if (bindbuf[i].buffer_type == MYSQL_TYPE_BLOB) {
+    } else if (bindbuf[i].buffer_type == MYSQL_TYPE_BLOB) {
         if (destructive) {
             n = new BinaryNode(bindbuf[i].buffer, len);
             bindbuf[i].buffer = 0;
-        }
-        else {
+        } else {
             BinaryNode* b = new BinaryNode;
             b->append(bindbuf[i].buffer, len);
             n = b;
@@ -651,8 +657,7 @@ int QoreMysqlBindGroup::parse(const QoreListNode* args, ExceptionSink* xsink) {
                     p += 2;
                     continue;
                 }
-            }
-            else {
+            } else {
                 if (comment == QMDC_LINE) {
                     if ((*p) == '\n' || ((*p) == '\r'))
                         comment = 0;
@@ -1682,6 +1687,7 @@ QoreStringNode* qore_mysql_module_init() {
     methods.registerOption(DBI_OPT_NUMBER_STRING, "when set, numeric/decimal values are returned as strings for backwards-compatibility; the argument is ignored; setting this option turns it on and turns off 'optimal-numbers' and 'numeric-numbers'");
     methods.registerOption(DBI_OPT_NUMBER_NUMERIC, "when set, numeric/decimal values are returned as arbitrary-precision number values; the argument is ignored; setting this option turns it on and turns off 'string-numbers' and 'optimal-numbers'");
     methods.registerOption(DBI_OPT_TIMEZONE, "set the server-side timezone, value must be a string in the format accepted by Timezone::constructor() on the client (ie either a region name or a UTC offset like \"+01:00\"), if not set the server's time zone will be assumed to be the same as the client's", stringTypeInfo);
+    methods.registerOption(MYSQL_OPT_COLLATION, "set the client-side collation value for the connection", stringTypeInfo);
 
     // register database functions with DBI subsystem
     DBID_MYSQL = DBI.registerDriver("mysql", methods, mysql_caps);
