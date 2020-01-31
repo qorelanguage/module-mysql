@@ -273,13 +273,6 @@ static MYSQL* qore_mysql_init(Datasource* ds, ExceptionSink* xsink) {
     }
 #endif
 
-    // set collation
-    if (mysql_set_collation(db, MYSQL_DEFAULT_COLLATION, xsink)) {
-        assert(*xsink);
-        mysql_close(db);
-        return nullptr;
-    }
-
     return db;
 }
 

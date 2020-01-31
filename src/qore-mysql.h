@@ -39,8 +39,6 @@
 
 #define MYSQL_OPT_COLLATION "collation"
 
-#define MYSQL_DEFAULT_COLLATION "latin1_general_cs"
-
 class QoreMysqlConnection;
 
 class MyResult {
@@ -228,7 +226,7 @@ public:
     Datasource& ds;
     const AbstractQoreZoneInfo* server_tz;
     int numeric_support;
-    std::string collation = MYSQL_DEFAULT_COLLATION;
+    std::string collation;
 
     DLLLOCAL QoreMysqlConnection(MYSQL* d, Datasource& n_ds)
         : db(d), ds(n_ds),
@@ -245,13 +243,12 @@ public:
         if (wasInTransaction(ds))
             xsink->raiseException("DBI:MYSQL:CONNECTION-ERROR", "connection to MySQL database server lost while in a transaction; transaction has been lost");
 
-        const char* collation_str;
         MYSQL *new_db = qore_mysql_init(ds, xsink);
         if (!new_db) {
             ds->connectionAborted();
             return -1;
         }
-        if (collation != MYSQL_DEFAULT_COLLATION && mysql_set_collation(new_db, collation.c_str(), xsink)) {
+        if (!collation.empty() && mysql_set_collation(new_db, collation.c_str(), xsink)) {
             return -1;
         }
 

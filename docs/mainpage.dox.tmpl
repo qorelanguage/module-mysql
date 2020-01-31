@@ -59,9 +59,8 @@ major_version * 10000 + minor_version * 100 + sub_version
     - \c "numeric-numbers": return numeric types as arbitrary-precision number values
     - \c "timezone": accepts a string argument that can be either a region name (ex: \c "Europe/Prague") or a UTC offset (ex: \c "+01:00") to set the server's time zone rules; this is useful if connecting to a database server in a different time zone.  If this option is not set then the server's time zone is assumed to be the same as the client's time zone; see @ref mysqltimezone.
 
-    @note if the \c "collation" option is not set, the default value is set to \c "latin1_general_cs" to ensure
-    case-sensitive matches consistent with other databases; if this is not desired, then set the \c "collation"
-    option to the desired value instead.
+    @note if the \c "collation" option is set, the collation is set automatically for each connection to the given
+    value
 
     Options can be set in the \c Datasource or \c DatasourcePool constructors as in the following examples:
     @code
