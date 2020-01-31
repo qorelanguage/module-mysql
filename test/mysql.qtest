@@ -118,7 +118,7 @@ class MysqlTest inherits QUnit::Test {
     collationTest() {
         Datasource db(connstr);
         db.open();
-        assertEq("latin1_general_cs", db.getOption("collation"));
+        assertNothing(db.getOption("collation"));
         assertThrows("MYSQL-COLLATION-ERROR", \db.setOption(), ("collation", "xxx"));
     }
 
