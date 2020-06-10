@@ -207,13 +207,13 @@ static void mysql_thread_cleanup(void* unused) {
 }
 
 static DateTimeNode* qore_mysql_makedt(const QoreMysqlConnection& conn, int year, int month, int day, int hour = 0, int minute = 0, int second = 0, int us = 0) {
-   // we have to ensure that time values with no date component are created with 1970-01-01 (the start of the UNIX epoch)
-   if (!year && !month && !day) {
-      year = 1970;
-      month = 01;
-      day = 01;
-   }
-   return DateTimeNode::makeAbsolute(conn.getTZ(), year, month, day, hour, minute, second, us);
+    // we have to ensure that time values with no date component are created with 1970-01-01 (the start of the UNIX epoch)
+    if (!year && !month && !day) {
+        year = 1970;
+        month = 01;
+        day = 01;
+    }
+    return DateTimeNode::makeAbsolute(conn.getTZ(), year, month, day, hour, minute, second, us);
 }
 
 static MYSQL* qore_mysql_init(Datasource* ds, ExceptionSink* xsink) {
@@ -485,7 +485,7 @@ QoreValue MyResult::getBoundColumnValue(int i, bool destructive) {
         }
     } else if (bindbuf[i].buffer_type == MYSQL_TYPE_DATETIME) {
         MYSQL_TIME *t = (MYSQL_TIME*)bindbuf[i].buffer;
-        n = qore_mysql_makedt(*conn, t->year, t->month, t->day, t->hour, t->minute, t->second);
+        n = qore_mysql_makedt(*conn, t->year, t->month, t->day, t->hour, t->minute, t->second, t->second_part);
     } else if (bindbuf[i].buffer_type == MYSQL_TYPE_BLOB) {
         if (destructive) {
             n = new BinaryNode(bindbuf[i].buffer, len);
@@ -1334,62 +1334,62 @@ static int mysql_stmt_api_close(SQLStatement* stmt, ExceptionSink* xsink) {
 }
 
 static QoreValue mysql_to_qore(const MYSQL_FIELD& f, char* row, unsigned long len, const QoreMysqlConnection& conn) {
-   // some basic type checking
-   switch (f.type) {
-      // for integer values
-      case FIELD_TYPE_SHORT:
-      case FIELD_TYPE_LONG:
-      case FIELD_TYPE_INT24:
-      case FIELD_TYPE_TINY:
-         return atoi(row);
+    // some basic type checking
+    switch (f.type) {
+        // for integer values
+        case FIELD_TYPE_SHORT:
+        case FIELD_TYPE_LONG:
+        case FIELD_TYPE_INT24:
+        case FIELD_TYPE_TINY:
+            return atoi(row);
 
-      // for floating point values
-      case FIELD_TYPE_FLOAT:
-      case FIELD_TYPE_DOUBLE:
-         return atof(row);
+        // for floating point values
+        case FIELD_TYPE_FLOAT:
+        case FIELD_TYPE_DOUBLE:
+            return atof(row);
 
-      // for datetime values
-      case FIELD_TYPE_DATETIME: {
-         row[4]  = '\0';
-         row[7]  = '\0';
-         row[10] = '\0';
-         row[13] = '\0';
-         row[16] = '\0';
+        // for datetime values
+        case FIELD_TYPE_DATETIME: {
+            row[4]  = '\0';
+            row[7]  = '\0';
+            row[10] = '\0';
+            row[13] = '\0';
+            row[16] = '\0';
 
-         return qore_mysql_makedt(conn, atoi(row), atoi(row + 5), atoi(row + 8), atoi(row + 11), atoi(row + 14), atoi(row + 17));
-      }
+            return qore_mysql_makedt(conn, atoi(row), atoi(row + 5), atoi(row + 8), atoi(row + 11), atoi(row + 14), atoi(row + 17));
+        }
 
-      // for date values
-      case FIELD_TYPE_DATE: {
-         row[4] = '\0';
-         row[7] = '\0';
-         return qore_mysql_makedt(conn, atoi(row), atoi(row + 5), atoi(row + 8));
-      }
+        // for date values
+        case FIELD_TYPE_DATE: {
+            row[4] = '\0';
+            row[7] = '\0';
+            return qore_mysql_makedt(conn, atoi(row), atoi(row + 5), atoi(row + 8));
+        }
 
-      // for time values
-      case FIELD_TYPE_TIME: {
-         row[2] = '\0';
-         row[5] = '\0';
-         return qore_mysql_makedt(conn, 1970, 1, 1, atoi(row), atoi(row + 3), atoi(row + 6));
-      }
+        // for time values
+        case FIELD_TYPE_TIME: {
+            row[2] = '\0';
+            row[5] = '\0';
+            return qore_mysql_makedt(conn, 1970, 1, 1, atoi(row), atoi(row + 3), atoi(row + 6));
+        }
 
-      case FIELD_TYPE_TIMESTAMP:
-         return new DateTimeNode(conn.getTZ(), row);
+        case FIELD_TYPE_TIMESTAMP:
+            return new DateTimeNode(conn.getTZ(), row);
 
-      // process binary values
-      case FIELD_TYPE_STRING:
-         //printd(5, "charset: %d str: %s\n", f.charsetnr, row);
-         if (f.charsetnr == 63)
-            return new BinaryNode(row, len);
-         break;
+        // process binary values
+        case FIELD_TYPE_STRING:
+            //printd(5, "charset: %d str: %s\n", f.charsetnr, row);
+            if (f.charsetnr == 63)
+                return new BinaryNode(row, len);
+            break;
 
-      // to avoid warning about unhandled types
-      default:
-         break;
-   }
+        // to avoid warning about unhandled types
+        default:
+            break;
+    }
 
-   // the rest defaults to string
-   return new QoreStringNode(row, conn.ds.getQoreEncoding());
+    // the rest defaults to string
+    return new QoreStringNode(row, conn.ds.getQoreEncoding());
 }
 
 static QoreHashNode* get_result_set(const QoreMysqlConnection& conn, MYSQL_RES *res, ExceptionSink* xsink, bool single_row = false) {
