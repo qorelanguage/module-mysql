@@ -169,6 +169,8 @@ hash: (1 member)
 
     @subsection mysql2021 mysql Driver Version 2.0.2.1
     <b>New Features and Bug Fixes</b>
+    - fixed bugs selecting date/time values with sub-second precision
+      (<a href="https://github.com/qorelanguage/qore/issues/3949">issue 3949</a>)
     - implemented the \c "collation" option to allow the client-side per-connection collation value to be set
       (<a href="https://github.com/qorelanguage/qore/issues/3753">issue 3753</a>)
     - updated SQLStatement::fetchColumns() to return an empty hash when no data is available

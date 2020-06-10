@@ -107,12 +107,22 @@ class MysqlTest inherits QUnit::Test {
 
         createDataModel(db);
 
+        addTestCase("datetime test", \dateTimeTest());
         addTestCase("collation test", \collationTest());
         addTestCase("context test case", \contextTests());
         addTestCase("transaction test case", \transactionTests());
         addTestCase("select row test", \selectRowTest());
 
         set_return_value(main());
+    }
+
+    dateTimeTest() {
+        Datasource db(connstr);
+
+        date now = now_us();
+        string sql = sprintf("select timestamp '%s' as now", now.format("YYYY-MM-DD HH:mm:SS.xx"));
+        date dbnow = db.selectRow(sql).now;
+        assertEq(now, dbnow);
     }
 
     collationTest() {
