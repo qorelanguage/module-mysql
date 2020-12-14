@@ -612,7 +612,7 @@ set_qore_cppflags() {
 
 find_qore() {
     a="$1"
-    if test \( "$a" = "/" -o -z "$a" \) -a -h "$a/lib${LIBSUFFIX}"; then
+    if test \( "$a" = "/" -o -z "$a" \) -a "/usr/lib${LIBSUFFIX}"; then
         a=/usr
     fi
     lib=$a/lib${LIBSUFFIX}
