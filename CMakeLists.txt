@@ -63,7 +63,7 @@ set(CPP_SRC src/mysql.cpp)
 
 set(module_name "mysql")
 
-add_library(${module_name} SHARED ${CPP_SRC})
+add_library(${module_name} MODULE ${CPP_SRC})
 
 qore_binary_module(${module_name} ${PROJECT_VERSION} ${MySQL_LIBS_R} Threads::Threads)
 
