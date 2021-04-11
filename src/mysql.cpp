@@ -676,7 +676,7 @@ int QoreMysqlBindGroup::parse(const QoreListNode* args, ExceptionSink* xsink) {
                 p++;
                 if ((*p) == 'd') {
                     DBI_concat_numeric(&tmp, v);
-                    str->replace(offset, 2, &tmp);
+                    str->replace(offset, 2, tmp.c_str());
                     p = str->getBuffer() + offset + tmp.strlen();
                     tmp.clear();
                     continue;
@@ -684,7 +684,7 @@ int QoreMysqlBindGroup::parse(const QoreListNode* args, ExceptionSink* xsink) {
                 if ((*p) == 's') {
                     if (DBI_concat_string(&tmp, v, xsink))
                         return -1;
-                    str->replace(offset, 2, &tmp);
+                    str->replace(offset, 2, tmp.c_str());
                     p = str->getBuffer() + offset + tmp.strlen();
                     tmp.clear();
                     continue;
