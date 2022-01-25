@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 
 # AC_PREREQ(2.59)
-AC_INIT([qore-mysql-module], [2.0.2.1],
+AC_INIT([qore-mysql-module], [2.1],
         [David Nichols <david@qore.org>],
         [qore-mysql-module])
 AM_INIT_AUTOMAKE([no-dist-gzip dist-bzip2 tar-ustar])

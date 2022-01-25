@@ -1,4 +1,4 @@
-%define mod_ver 2.0.2.1
+%define mod_ver 2.1
 %define module_api %(qore --latest-module-api 2>/dev/null)
 %define module_dir %{_libdir}/qore-modules
 
@@ -41,7 +41,6 @@ License: GPL
 Group: Development/Languages
 URL: http://www.qoretechnologies.com/qore
 Source: http://prdownloads.sourceforge.net/qore/%{name}-%{version}.tar.bz2
-#Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 Requires: /usr/bin/env
 Requires: qore-module(abi)%{?_isa} = %{module_api}
@@ -104,6 +103,9 @@ This RPM provides API documentation, test and example programs
 %doc docs/mysql/html test/db-test.q test/sql-stmt.q
 
 %changelog
+* Tue Jan 25 2022 David Nichols <david@qore.org> 2.1
+- updated version to 2.1
+
 * Tue May 1 2018 David Nichols <david@qore.org> 2.0.2.1
 - updated version to 2.0.2.1
 
