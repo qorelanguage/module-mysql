@@ -65,7 +65,7 @@ set(module_name "mysql")
 
 add_library(${module_name} MODULE ${CPP_SRC})
 
-qore_binary_module(${module_name} ${PROJECT_VERSION} ${MySQL_LIBS_R} Threads::Threads)
+qore_external_binary_module(${module_name} ${PROJECT_VERSION} ${MySQL_LIBS_R} Threads::Threads)
 
 qore_dist(${PROJECT_VERSION})
 
