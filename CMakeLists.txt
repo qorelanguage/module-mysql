@@ -29,6 +29,16 @@ message(STATUS "Found POSIX Threads: FALSE")
 message(FATAL_ERROR "POSIX threads does not seem to be supported on this platform, aborting")
 endif()
 
+if (DEFINED ENV{MySQL_INCLUDE_DIR})
+    set(MySQL_INCLUDE_DIR $ENV{MySQL_INCLUDE_DIR})
+endif()
+if (DEFINED ENV{MySQL_LIBS})
+    set(MySQL_LIBS $ENV{MySQL_LIBS})
+endif()
+if (DEFINED ENV{MySQL_LIBS_R})
+    set(MySQL_LIBS_R $ENV{MySQL_LIBS_R})
+endif()
+
 find_package(MySQL REQUIRED)
 
 set(CMAKE_REQUIRED_INCLUDES ${MySQL_INCLUDE_DIR})
