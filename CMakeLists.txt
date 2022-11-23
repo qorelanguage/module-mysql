@@ -73,10 +73,25 @@ set(CPP_SRC src/mysql.cpp)
 
 set(module_name "mysql")
 
+set(QORE_DOX_TMPL_SRC
+  docs/mainpage.dox.tmpl
+)
+
 add_library(${module_name} MODULE ${CPP_SRC})
+
+if (DEFINED ENV{DOXYGEN_EXECUTABLE})
+    set(DOXYGEN_EXECUTABLE $ENV{DOXYGEN_EXECUTABLE})
+endif()
 
 qore_external_binary_module(${module_name} ${PROJECT_VERSION} ${MySQL_LIBS_R} Threads::Threads)
 
 qore_dist(${PROJECT_VERSION})
 
 qore_config_info()
+
+# NOTE: find_package(Doxygen) called in qore_external_binary_module()
+if (DOXYGEN_FOUND)
+    qore_wrap_dox(QORE_DOX_SRC ${QORE_DOX_TMPL_SRC})
+    add_custom_target(QORE_MOD_DOX_FILES DEPENDS ${QORE_DOX_SRC})
+    add_dependencies(docs-module QORE_MOD_DOX_FILES)
+endif()
